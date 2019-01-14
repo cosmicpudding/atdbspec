@@ -70,8 +70,11 @@ def main():
 	################################################
 
 	# Read file (either tab or comma separated)
-	d = ascii.read(fname,delimiter='\s',guess=False)
-	#d = ascii.read(fname,delimiter=',',guess=False)
+	try:
+		d = ascii.read(fname,delimiter=',',guess=False)
+	except:
+		d = ascii.read(fname,delimiter='\s',guess=False)
+		
 	print(list(d.keys())) 
 
 	# Start the file
