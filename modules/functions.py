@@ -36,7 +36,7 @@ def dec2dec(dec):
 ###################################################################
 # Write source: Imaging
 
-def writesource_imaging(i,j,scan,date,stime,date2,etime,lo,sub1,src,ra,dec,old_date,old_etime,field,ints,weightpatt,refbeam,renum,out,telescopes):
+def writesource_imaging(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,telescopes):
 
 	# Write to file (not plus=)
 	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,ints,telescopes))
@@ -51,7 +51,7 @@ def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/dev/null/ --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --science_mode=IAB --operation=specification --atdb_host=prod --skip_auto_ingest\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
 	out.flush()
 
 	return scan

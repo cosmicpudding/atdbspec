@@ -27,13 +27,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/ARTS_SC1_shakedown_input.csv',
+			default='input/input_20190111_test.txt',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='SC1',
+			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='2345678ABCD',
+			default='2346789ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 
 	# Parse the arguments above
@@ -47,8 +47,9 @@ def main():
 				  'hybrid': 'hybridXX_20180928_8bit'}
 
 	# beam switching time (only relevant for imaging)
+	#swtime_set = 15 # min
 	swtime_set = 5 # min
-	bttime_set = 1.5 # min
+	bttime_set = 2 # min
 	rndbm_set = list(np.arange(0,40))
 
 	# Other case
@@ -63,17 +64,20 @@ def main():
 	# specify the filename
 	fname = args.filename
 
+	# offset (if local time)
+	offset = 0 # hours
+
 	################################################
 
 	# Read file (either tab or comma separated)
-	#d = ascii.read(fname,delimiter='\s',guess=False)
-	d = ascii.read(fname,delimiter=',',guess=False)
+	d = ascii.read(fname,delimiter='\s',guess=False)
+	#d = ascii.read(fname,delimiter=',',guess=False)
 	print(list(d.keys())) 
 
 	# Start the file
 	outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
 	out = open(outname,'w')
-	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 19/12/2018\n\n')
+	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 03/01/2019\n\n')
 	out.flush()
 
 	if args.mode == 'SC4':
@@ -99,7 +103,12 @@ def main():
 		# Get the common parameters for all
 		src = d['source'][i]
 		stime = d['time1'][i]
-		stime_dt = datetime.strptime(stime,'%H:%M:%S')
+		try:
+			stime_dt = datetime.strptime(stime,'%H:%M:%S')
+		except ValueError:
+			stime_dt = datetime.strptime(stime,'%H:%M')
+		stime_dt = stime_dt + timedelta(hours=offset)
+
 		date = d['date1'][i]
 		scan = 0 #  d['scan'][i]
 		src_obstype = '-'
@@ -135,8 +144,11 @@ def main():
 
 			if len(etime.split(':')[0]) < 2:
 				etime = '0'+etime
-
-			etime_dt = datetime.strptime(etime,'%H:%M:%S')
+			try:
+				etime_dt = datetime.strptime(etime,'%H:%M:%S')
+			except ValueError:
+				etime_dt = datetime.strptime(etime,'%H:%M')
+			etime_dt = etime_dt + timedelta(hours=offset)
 
 		elif 'duration' in d.keys():
 			etime_dt = stime_dt + timedelta(seconds=float(d['duration'][i]))
@@ -175,9 +187,9 @@ def main():
 		# Imaging specific things
 		if args.mode == 'imaging':
 			src_obstype = d['type'][i]
-			lo = d['lo'][i]
-			sub1 = d['sub1'][i]
-			field = d['intent'][i].upper()
+			#lo = d['lo'][i]
+			#sub1 = d['sub1'][i]
+			#field = d['intent'][i].upper()
 
 			# System offset stuff
 			if d['switch_type'][i] == 'system':
@@ -211,8 +223,17 @@ def main():
 			date2 = date
 
 		# total date time
-		sdate_dt = datetime.strptime(date+stime,'%Y-%m-%d%H:%M:%S')
-		edate_dt = datetime.strptime(date2+etime,'%Y-%m-%d%H:%M:%S')
+		try:
+			sdate_dt = datetime.strptime(date+stime,'%Y-%m-%d%H:%M:%S')
+		except ValueError:
+			sdate_dt = datetime.strptime(date+stime,'%Y-%m-%d%H:%M')
+		try:
+			edate_dt = datetime.strptime(date2+etime,'%Y-%m-%d%H:%M:%S')
+		except ValueError:
+			edate_dt = datetime.strptime(date2+etime,'%Y-%m-%d%H:%M')
+
+		sdate_dt = sdate_dt + timedelta(hours=offset)
+		edate_dt = edate_dt + timedelta(hours=offset)
 
 		# Account for beam switching (imaging only)
 		if 'S' in src_obstype:
@@ -232,6 +253,10 @@ def main():
 				rndbm = rndbm_subset
 				swtime = swtime_subset
 				bttime = bttime_subset
+			elif src_obstype == 'S*':
+				rndbm = rndbm_set	
+				swtime = swtime_set
+				bttime = bttime_set				
 			else:
 				rndbm = rndbm_set	
 				swtime = swtime_set
@@ -255,7 +280,8 @@ def main():
 				print('chosen beam:',chosenbeam)
 
 				# Update the scan
-				scan = str(d['scan'][i])[:-2]+ '%.3d' % (j+1)
+				#scan = str(d['scan'][i])[:-2]+ '%.3d' % (j+1)
+				scan = '000000' + '%.3d' % (j+1)
 				print(scan)
 
 				beamname = 'B0%.2d' % chosenbeam
@@ -273,20 +299,33 @@ def main():
 
 				# Recalculate the start and end time
 				if k == 0:
-					exectime = datetime.strptime(date+stime,'%Y-%m-%d%H:%M:%S')#+timedelta(seconds=15)
+
+					try:
+						exectime = datetime.strptime(date+stime,'%Y-%m-%d%H:%M:%S')#+timedelta(seconds=15)
+					except ValueError:
+						exectime = datetime.strptime(date+stime,'%Y-%m-%d%H:%M')
+
+					exectime = exectime + timedelta(hours=offset)
+
 					sdate = exectime
 					edate = exectime + timedelta(minutes=step*60.)
 				else:
-					exectime = datetime.strptime(old_date+old_etime,'%Y-%m-%d%H:%M:%S')#+timedelta(seconds=15)
+					try:
+						exectime = datetime.strptime(old_date+old_etime,'%Y-%m-%d%H:%M:%S')#+timedelta(seconds=15)
+					except ValueError:
+						exectime = datetime.strptime(old_date+old_etime,'%Y-%m-%d%H:%M')
 					sdate = exectime + timedelta(minutes=bttime)
 					edate = exectime + timedelta(minutes=step*60.+bttime)
+
+				if edate > edate_dt or k > nbeams-1:
+					continue
 
 				# Write sources to file
 				if system_offset == True:
 					refbeam = str(chosenbeam)
-					scannum = writesource_imaging(i,j,scan,sdate.date(),sdate.time(),edate.date(),edate.time(),lo,sub1,src,ra,dec,old_date,old_etime,field,ints,weightpatt,refbeam,renum,out,args.telescopes)		
+					scannum = writesource_imaging(i,j,scan,sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,args.telescopes)		
 				else:
-					scannum = writesource_imaging(i,j,scan,sdate.date(),sdate.time(),edate.date(),edate.time(),lo,sub1,src,ra_new,dec_new,old_date,old_etime,field,ints,weightpatt,refbeam,renum,out,args.telescopes)		
+					scannum = writesource_imaging(i,j,scan,sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra_new,dec_new,old_date,old_etime,ints,weightpatt,refbeam,renum,out,args.telescopes)		
 
 				# update parameters
 				old_etime = str(edate.time())
@@ -298,7 +337,7 @@ def main():
 
 			# Write sources to file
 			if args.mode == 'imaging':
-				scannum = writesource_imaging(i,j,scan,date,stime,date2,etime,lo,sub1,src,ra,dec,old_date,old_etime,field,ints,weightpatt,refbeam,renum,out,args.telescopes)
+				scannum = writesource_imaging(i,j,scan,str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,args.telescopes)
 				j+=1
 			elif args.mode == 'SC4':
 				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration)		
