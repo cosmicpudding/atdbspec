@@ -27,13 +27,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/input_20190111_test.txt',
+			default='input/ARTS_SC4_20190115.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
+			default='SC4',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='2346789ABCD',
+			default='23568ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 
 	# Parse the arguments above
@@ -74,7 +74,7 @@ def main():
 		d = ascii.read(fname,delimiter=',',guess=False)
 	except:
 		d = ascii.read(fname,delimiter='\s',guess=False)
-		
+
 	print(list(d.keys())) 
 
 	# Start the file

@@ -78,7 +78,7 @@ def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,
 	stime_cluster = (sdate_dt - timedelta(minutes=5)).time()
 
 	# Write to file (not plus=)
-	if pulsar == 'True':
+	if pulsar.lower() == 'true':
 		out.write("""sleepuntil_utc %s %s
 start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar\n\n""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
 		out.flush()
