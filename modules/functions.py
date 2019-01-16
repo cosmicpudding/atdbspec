@@ -71,7 +71,7 @@ def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid):
+def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum):
 
 	# Cluster start time
 	sdate_dt = datetime.strptime(str(date)+str(stime),'%Y-%m-%d%H:%M:%S')
@@ -87,7 +87,10 @@ start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s 
 
 	# Cluster mode hack
 	if cluster_mode == 'ATDB':
-		cmd = cmd + ' --atdb --taskid %i\n\n' % (start_tid + j) 
+
+		#make the date format
+		tid_date = datetime.strftime(sdate_dt,'%y%m%d')
+		cmd = cmd + ' --atdb --taskid %s%.3d\n\n' % (tid_date,start_tid+start_tnum) 
 	else:
 		cmd = cmd + '\n\n'
 

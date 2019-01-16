@@ -50,7 +50,8 @@ def main():
 
 
 	# hack for ARTS cluster mode
-	start_tid = 190116005 
+	start_tid = 5
+	start_tnum = 0
 
 	# beam switching time (only relevant for imaging)
 	#swtime_set = 15 # min
@@ -349,9 +350,17 @@ def main():
 				scannum = writesource_imaging(i,j,scan,str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,args.telescopes)
 				j+=1
 			elif args.mode == 'SC4':
+
+				# Reset the tid if needed
+				if str(old_date) != str(date) and old_date != None:
+					start_tid = 1
+					start_tnum = 0
+
 				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration)		
-				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid)		
+				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid,start_tnum)		
 				j+=1
+				start_tnum+=1
+
 			elif args.mode == 'SC1':
 				scannum = writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,sband,eband,parfile,duration)		
 				j+=1
