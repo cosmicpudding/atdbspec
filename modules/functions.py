@@ -71,7 +71,7 @@ def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration):
+def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid):
 
 	# Cluster start time
 	sdate_dt = datetime.strptime(str(date)+str(stime),'%Y-%m-%d%H:%M:%S')
@@ -79,13 +79,22 @@ def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,
 
 	# Write to file (not plus=)
 	if pulsar.lower() == 'true':
-		out.write("""sleepuntil_utc %s %s
-start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar\n\n""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
-		out.flush()
+		cmd = ("""sleepuntil_utc %s %s
+start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
 	else:
-		out.write("""sleepuntil_utc %s %s
-start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s\n\n""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
-		out.flush()
+		cmd = ("""sleepuntil_utc %s %s
+start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
+
+	# Cluster mode hack
+	if cluster_mode == 'ATDB':
+		cmd = cmd + ' --atdb --taskid %i\n\n' % (start_tid + j) 
+	else:
+		cmd = cmd + '\n\n'
+
+	# Write out at the end
+	out.write(cmd)
+	out.flush()
+
 
 	return scan
 

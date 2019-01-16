@@ -27,7 +27,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/ARTS_SC4_20190115.csv',
+			default='input/ARTS_SC4_20190116.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='SC4',
@@ -35,16 +35,22 @@ def main():
 	parser.add_argument('-t', '--telescopes',
 			default='23568ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
+	parser.add_argument('-c', '--cluster_mode',
+		default='ATDB',
+		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 
 	# Parse the arguments above
 	args = parser.parse_args()
-
 
 	# Weight pattern dictionary
 	weightdict = {'compound': 'square_39p1',
 				  'XXelement': 'central_element_beams_x_37beams',
 				  'YYelement': 'central_element_beams_y_37beams',
 				  'hybrid': 'hybridXX_20180928_8bit'}
+
+
+	# hack for ARTS cluster mode
+	start_tid = 190116005 
 
 	# beam switching time (only relevant for imaging)
 	#swtime_set = 15 # min
@@ -344,10 +350,10 @@ def main():
 				j+=1
 			elif args.mode == 'SC4':
 				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration)		
-				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration)		
+				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid)		
+				j+=1
 			elif args.mode == 'SC1':
 				scannum = writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,sband,eband,parfile,duration)		
-				
 				j+=1
 
 		# update parameters
