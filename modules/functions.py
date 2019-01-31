@@ -7,6 +7,10 @@ __date__ = "$19-dec-2018 17:00:00$"
 __version__ = "1.2"
 
 from datetime import datetime,timedelta
+import sys
+from astropy.io import ascii
+from modules.visfunc import *
+import numpy as np
 
 
 ###################################################################
@@ -36,13 +40,11 @@ def dec2dec(dec):
 ###################################################################
 # Write source: Imaging
 
-def writesource_imaging(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,telescopes):
+def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,ints,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes))
 	out.flush()
-
-	return scan
 
 ###################################################################
 # Write source: SC4
@@ -51,7 +53,7 @@ def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --science_mode=IAB --operation=specification --atdb_host=prod --skip_auto_ingest\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod --skip_auto_ingest\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
 	out.flush()
 
 	return scan
@@ -80,10 +82,10 @@ def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,
 	# Write to file (not plus=)
 	if pulsar.lower() == 'true':
 		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
+start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
 	else:
 		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
+start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
 
 	# Cluster mode hack
 	if cluster_mode == 'ATDB':
@@ -100,4 +102,89 @@ start_obs --mac --ingest_to_archive --obs_mode survey --proctrigger --source %s 
 
 
 	return scan
+
+###################################################################
+# Convert pointing observation into a series of observations
+def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode):
+
+	# Location (WSRT)
+	lat = 52.91474
+	lon = 6.60334
+
+	print(sdate_dt,edate_dt,ints,weightpatt)
+	
+	# Read the pointing table
+	d = ascii.read('modules/stfma_v2.t')
+	print(d.keys())
+	
+	chosen_sources = []
+
+	# Find the closest match
+	lst1 = [ra2dec(d['STIM'][i])/15. for i in range(0,len(d))]
+	lst2 = [ra2dec(d['ETIM'][i])/15. for i in range(0,len(d))]
+	src = d['FIELD']
+	ra = d['RA']
+	dec = d['DEC']
+	#average_ha = 0.5 * (ha1+ha2) 
+	
+	# Datestamps 
+	points_time = [calcUT(lst1[i],str(sdate_dt.date()),lon) for i in range(0,len(lst1))]
+	points_dt = [datetime.strptime(str(sdate_dt.date())+points_time[i],'%Y-%m-%d%H:%M:%S') for i in range(0,len(points_time))]
+	#print(points_dt)
+
+	diff = np.array([abs(points_dt[i]-sdate_dt) for i in range(0,len(points_dt))])
+	min_diff = min(diff)
+	min_index = np.argmin(diff)
+	print(min_index,diff[min_index],points_dt[min_index],sdate_dt)
+	print(src[min_index],ra[min_index],dec[min_index])
+
+	# Change if not quite right
+	if points_dt[min_index] < sdate_dt:
+		min_index+=1
+
+		print(min_index,diff[min_index],points_dt[min_index],sdate_dt)
+		print(src[min_index],ra[min_index],dec[min_index])
+
+	# append the first
+	src_start_dt = datetime.strptime(str(sdate_dt.date())+calcUT(lst1[min_index],str(sdate_dt.date()),lon),'%Y-%m-%d%H:%M:%S')
+	src_end_dt = datetime.strptime(str(sdate_dt.date())+calcUT(lst2[min_index],str(sdate_dt.date()),lon),'%Y-%m-%d%H:%M:%S')
+	currdate = str(src_start_dt.date())
+
+	old_src_start_dt = None
+	old_src_end_dt = None
+
+	while src_end_dt <= edate_dt and src_start_dt <= edate_dt:
+
+
+		src_start_dt = datetime.strptime(currdate+calcUT(lst1[min_index],currdate,lon),'%Y-%m-%d%H:%M:%S')
+		src_end_dt = datetime.strptime(currdate+calcUT(lst2[min_index],currdate,lon),'%Y-%m-%d%H:%M:%S')
+
+		if src_start_dt > edate_dt or src_end_dt > edate_dt:
+			break
+
+		if src_start_dt.time() > src_end_dt.time():
+			src_end_dt = src_end_dt + timedelta(days=1)
+			currdate = str(src_end_dt.date())
+
+		chosen_sources.append([min_index+1,src[min_index],(ra[min_index]),(dec[min_index]),src_start_dt,src_end_dt])
+		min_index+=1
+
+		if min_index >= len(d):
+			min_index = 0
+
+		old_src_start_dt = src_start_dt
+		old_src_end_dt = src_end_dt 
+
+	for x in chosen_sources:
+		print(x[0],x[1],x[2],x[3],'s',x[4],x[5])
+		refbeam = '0'
+
+		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode)
+
+
+	sys.exit()
+
+	# Now process
+
+
 
