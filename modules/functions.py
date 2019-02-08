@@ -53,7 +53,7 @@ def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod --skip_auto_ingest\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
 	out.flush()
 
 	return scan
@@ -114,12 +114,13 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 	print(sdate_dt,edate_dt,ints,weightpatt)
 	
 	# Read the pointing table
-	d = ascii.read('modules/stfma_v2.t')
+	d = ascii.read('modules/stfma_v3.t')
 	print(d.keys())
 	
 	chosen_sources = []
 
 	# Find the closest match
+	src_index = d['OBS']
 	lst1 = [ra2dec(d['STIM'][i])/15. for i in range(0,len(d))]
 	lst2 = [ra2dec(d['ETIM'][i])/15. for i in range(0,len(d))]
 	src = d['FIELD']
@@ -135,7 +136,7 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 	diff = np.array([abs(points_dt[i]-sdate_dt) for i in range(0,len(points_dt))])
 	min_diff = min(diff)
 	min_index = np.argmin(diff)
-	print(min_index,diff[min_index],points_dt[min_index],sdate_dt)
+	print(src_index[min_index],min_index,diff[min_index],points_dt[min_index],sdate_dt)
 	print(src[min_index],ra[min_index],dec[min_index])
 
 	# Change if not quite right
@@ -159,14 +160,26 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 		src_start_dt = datetime.strptime(currdate+calcUT(lst1[min_index],currdate,lon),'%Y-%m-%d%H:%M:%S')
 		src_end_dt = datetime.strptime(currdate+calcUT(lst2[min_index],currdate,lon),'%Y-%m-%d%H:%M:%S')
 
+		# need to modify these to be round numbers of 10s... 
+		if src_start_dt.second % 10 !=  0:
+			remainder = src_start_dt.second % 10
+
+			if remainder <= 5: 
+				src_start_dt = src_start_dt - timedelta(seconds=remainder)
+			else:
+				src_start_dt  = src_start_dt + timedelta(seconds=(10 - remainder))
+
+		src_end_dt = src_start_dt + timedelta(minutes=16, seconds=10) 
+
 		if src_start_dt > edate_dt or src_end_dt > edate_dt:
 			break
 
-		if src_start_dt.time() > src_end_dt.time():
-			src_end_dt = src_end_dt + timedelta(days=1)
-			currdate = str(src_end_dt.date())
+		if old_src_end_dt != None:
+			if src_end_dt.date() > old_src_end_dt.date():
+				#src_end_dt = src_end_dt + timedelta(days=1)
+				currdate = str(src_end_dt.date())
 
-		chosen_sources.append([min_index+1,src[min_index],(ra[min_index]),(dec[min_index]),src_start_dt,src_end_dt])
+		chosen_sources.append([min_index+1,src[min_index],(ra[min_index]),(dec[min_index]),src_start_dt,src_end_dt,src_index[min_index]])
 		min_index+=1
 
 		if min_index >= len(d):
@@ -176,15 +189,40 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 		old_src_end_dt = src_end_dt 
 
 	for x in chosen_sources:
-		print(x[0],x[1],x[2],x[3],'s',x[4],x[5])
+		print(x[6],x[0],x[1],x[2],x[3],'s',x[4],x[5])
 		refbeam = '0'
 
 		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode)
 
 
-	sys.exit()
+###################################################################
+# Create test observations
+def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode):
 
-	# Now process
+	start = sdate_dt
+	end = sdate_dt + timedelta(seconds=int(duration))
+
+	for i in range(0,len(beams)):
+
+		for j in range(0,len(patterns)):
+
+			beam = beams[i]
+			pattern = patterns[j]
+			print(beam,pattern)
+
+			if beam != 0:
+				name = src + '_%i' % beam
+			else:
+				name = src
+
+			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode)
+
+			start = end + timedelta(seconds=120)
+			end = start + timedelta(seconds=int(duration))
+
+
+
+
 
 
 

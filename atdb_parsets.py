@@ -27,13 +27,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/pointing_test3.csv',
+			default='input/test_20190207_2.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
+			default='2345679ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -50,7 +50,7 @@ def main():
 
 
 	# hack for ARTS cluster mode
-	start_tid = 10
+	start_tid = 49
 	start_tnum = 0
 
 	# beam switching time (only relevant for imaging)
@@ -241,6 +241,13 @@ def main():
 				observing_mode = 'imaging_pointing'
 				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode)
 
+			elif src_obstype == 'O':
+				print('Operations tests mode identified!')
+				beams = [0,randint(1,40)]
+				patterns = [weightdict['compound'],weightdict['XXelement'],weightdict['YYelement']]
+				generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,args.telescopes,observing_mode)
+
+
 			# System offset stuff
 			if d['switch_type'][i] == 'system':
 				system_offset = True
@@ -365,11 +372,11 @@ def main():
 				j+=1
 
 		# Standard observation otherwise
-		else:	
+		elif src_obstype != 'O':	
 
 			# Write sources to file
 			if args.mode == 'imaging':
-				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,renum,out,args.telescopes,observing_mode)
+				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode)
 				j+=1
 			elif args.mode == 'SC4':
 
