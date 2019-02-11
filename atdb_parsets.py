@@ -406,7 +406,10 @@ def main():
 
 	# Make the resultting file executables
 	os.system('chmod oug+x %s' % outname)
-	os.system('chmod oug+x %s' % outname2)
+
+	# If SC4, then cluster file exists
+	if args.mode == 'SC4':
+		os.system('chmod oug+x %s' % outname2)
 
 	if args.upload:
 
