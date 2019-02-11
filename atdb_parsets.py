@@ -27,17 +27,21 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/test_20190207_2.csv',
+			default='input/atdbspec_test.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
+			default='SC4',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='2345679ABCD',
+			default='23456ABD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
+	parser.add_argument('-u', '--upload',
+		default=True,
+		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
+
 
 	# Parse the arguments above
 	args = parser.parse_args()
@@ -46,6 +50,8 @@ def main():
 	weightdict = {'compound': 'square_39p1',
 				  'XXelement': 'central_element_beams_x_37beams',
 				  'YYelement': 'central_element_beams_y_37beams',
+				  'XXelement40': 'central_element_beams_x',
+				  'YYelement40': 'central_element_beams_y',
 				  'hybrid': 'hybridXX_20180928_8bit'}
 
 
@@ -87,7 +93,7 @@ def main():
 	# Start the file
 	outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
 	out = open(outname,'w')
-	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 03/01/2019\n\n')
+	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n\n')
 	out.flush()
 
 	if args.mode == 'SC4':
@@ -95,7 +101,7 @@ def main():
 		# Start the file
 		outname2 = '%s_%s_cluster.sh' % (fname.split('.')[0],args.mode)
 		out2 = open(outname2,'w')
-		out2.write('#!/bin/bash\n# Script to create commands for ARTS SC4 cluster\n# Automatic generation script by V.A. Moss 07/12/2018\n# Last updated by V.A. Moss 16/01/2019\n\nsource $HOME/ARTS-obs/setup_env.sh\n\n')
+		out2.write('#!/bin/bash\n# Script to create commands for ARTS SC4 cluster\n# Automatic generation script by V.A. Moss 07/12/2018\n# Last updated by V.A. Moss 11/02/2019\n\nsource $HOME/ARTS-obs/setup_env.sh\n\n')
 		out2.flush()
 
 
@@ -398,8 +404,24 @@ def main():
 		old_etime = etime
 		old_date = date2
 
-	# Make the resultting file executable
+	# Make the resultting file executables
 	os.system('chmod oug+x %s' % outname)
+	os.system('chmod oug+x %s' % outname2)
+
+	if args.upload:
+
+		# Upload the file automatically to wcudata1
+		# Note: this assumes you have ssh key forwarding activated for apertif user account
+		cmd = "rsync -avzP %s apertif@wcudata1.apertif:~/atdb_client/scripts/" % outname
+		os.system(cmd)
+
+		if args.mode == 'SC4':
+
+			# Also do the same for SC4 cluster
+			# Note: this assumes you have ssh key forwarding activated for arts user account
+			cmd = 'rsync -avzP %s arts@arts041.apertif:~/observations/scripts/' % outname2
+			os.system(cmd)		
+
 
 if __name__ == '__main__':
     main()
