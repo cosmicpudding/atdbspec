@@ -27,19 +27,19 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/atdbspec_test.csv',
+			default='input/atdbpointing_example.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='SC4',
+			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456ABD',
+			default='23456789ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=True,
+		default=False,
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 
 
@@ -93,7 +93,7 @@ def main():
 	# Start the file
 	outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
 	out = open(outname,'w')
-	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n\n')
+	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
 	out.flush()
 
 	if args.mode == 'SC4':
@@ -246,6 +246,9 @@ def main():
 				# Send the relevant data to the pointing function
 				observing_mode = 'imaging_pointing'
 				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode)
+
+				# We don't want to proceed with the code once the pointing is done!
+				break
 
 			elif src_obstype == 'O':
 				print('Operations tests mode identified!')
