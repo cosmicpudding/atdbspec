@@ -41,6 +41,9 @@ def main():
 	parser.add_argument('-u', '--upload',
 		default=False,
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
+	parser.add_argument('-p', '--parset_only',
+		default=False,
+		help='Specify whether to only make a parset and not submit it (default: %(default)s)')
 
 
 	# Parse the arguments above
@@ -48,8 +51,8 @@ def main():
 
 	# Weight pattern dictionary
 	weightdict = {'compound': 'square_39p1',
-				  'XXelement': 'central_element_beams_x_37beams',
-				  'YYelement': 'central_element_beams_y_37beams',
+				  'XXelement': 'central_element_beams_x',
+				  'YYelement': 'central_element_beams_y',
 				  'XXelement40': 'central_element_beams_x',
 				  'YYelement40': 'central_element_beams_y',
 				  'hybrid': 'hybridXX_20180928_8bit'}
@@ -79,6 +82,12 @@ def main():
 
 	# offset (if local time)
 	offset = 0 # hours
+
+	# parsetonly string
+	if args.parset_only:
+		parsetonly = '--parset_only'
+	else:
+		parsetonly = ''
 
 	################################################
 
@@ -245,7 +254,7 @@ def main():
 
 				# Send the relevant data to the pointing function
 				observing_mode = 'imaging_pointing'
-				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode)
+				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly)
 
 				# We don't want to proceed with the code once the pointing is done!
 				break
@@ -254,7 +263,7 @@ def main():
 				print('Operations tests mode identified!')
 				beams = [0,randint(1,40)]
 				patterns = [weightdict['compound'],weightdict['XXelement'],weightdict['YYelement']]
-				generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,args.telescopes,observing_mode)
+				generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,args.telescopes,observing_mode,parsetonly)
 
 
 			# System offset stuff
@@ -371,9 +380,9 @@ def main():
 				# Write sources to file
 				if system_offset == True:
 					refbeam = str(chosenbeam)
-					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode)		
+					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)		
 				else:
-					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra_new,dec_new,ints,weightpatt,refbeam,out,args.telescopes,observing_mode)		
+					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra_new,dec_new,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)		
 
 				# update parameters
 				old_etime = str(edate.time())
@@ -385,7 +394,7 @@ def main():
 
 			# Write sources to file
 			if args.mode == 'imaging':
-				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode)
+				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)
 				j+=1
 			elif args.mode == 'SC4':
 
@@ -394,13 +403,13 @@ def main():
 					start_tid = 1
 					start_tnum = 0
 
-				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration)		
-				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid,start_tnum)		
+				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration,parsetonly)		
+				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid,start_tnum,parsetonly)		
 				j+=1
 				start_tnum+=1
 
 			elif args.mode == 'SC1':
-				scannum = writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,sband,eband,parfile,duration)		
+				scannum = writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,sband,eband,parfile,duration,parsetonly)		
 				j+=1
 
 		# update parameters

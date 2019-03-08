@@ -40,20 +40,20 @@ def dec2dec(dec):
 ###################################################################
 # Write source: Imaging
 
-def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode):
+def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes,parsetonly))
 	out.flush()
 
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,duration):
+def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,duration,parsetonly):
 
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parsetonly))
 	out.flush()
 
 	return scan
@@ -61,10 +61,10 @@ def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 ###################################################################
 # Write source: SC1
 
-def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sband,eband,parfile,duration):
+def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sband,eband,parfile,duration,parsetonly):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --par_file_name=%s  --start_band=%s --end_band=%s --science_mode=TAB --number_of_bins=1024 --central_frequency=1400 --ndps=1 --irods_coll=arts_main/arts_sc1 --data_dir=/data/01/Timing --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod \n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parfile,sband,eband))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --par_file_name=%s  --start_band=%s --end_band=%s --science_mode=TAB --number_of_bins=1024 --central_frequency=1400 --ndps=1 --irods_coll=arts_main/arts_sc1 --data_dir=/data/01/Timing --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parfile,sband,eband,parsetonly))
 	out.flush()
 
 	return scan
@@ -73,7 +73,7 @@ def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etim
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum):
+def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum,parsetonly):
 
 	# Cluster start time
 	sdate_dt = datetime.strptime(str(date)+str(stime),'%Y-%m-%d%H:%M:%S')
@@ -82,10 +82,10 @@ def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,
 	# Write to file (not plus=)
 	if pulsar.lower() == 'true':
 		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
+start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam,parsetonly))
 	else:
 		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam))
+start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam,parsetonly))
 
 	# Cluster mode hack
 	if cluster_mode == 'ATDB':
@@ -105,7 +105,7 @@ start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --t
 
 ###################################################################
 # Convert pointing observation into a series of observations
-def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode):
+def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode,parsetonly):
 
 	# Location (WSRT)
 	lat = 52.91474
@@ -192,12 +192,12 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 		print(x[6],x[0],x[1],x[2],x[3],'s',x[4],x[5])
 		refbeam = '0'
 
-		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode)
+		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly)
 
 
 ###################################################################
 # Create test observations
-def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode):
+def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode,parsetonly):
 
 	start = sdate_dt
 	end = sdate_dt + timedelta(seconds=int(duration))
@@ -215,7 +215,7 @@ def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescop
 			else:
 				name = src
 
-			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode)
+			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode,parsetonly)
 
 			start = end + timedelta(seconds=120)
 			end = start + timedelta(seconds=int(duration))
