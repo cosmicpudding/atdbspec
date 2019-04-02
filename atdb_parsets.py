@@ -27,13 +27,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/atdbpointing_example.csv',
+			default='input/start.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
+			default='SC4',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
+			default='23456789',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -66,7 +66,7 @@ def main():
 	#swtime_set = 15 # min
 	swtime_set = 5 # min
 	bttime_set = 2 # min
-	rndbm_set = list(np.arange(0,40))
+	rndbm_set = list(np.arange(0,40)) # list(np.arange(0,40))
 
 	# Other case
 	swtime_subset = 15 # min
@@ -175,6 +175,15 @@ def main():
 				etime_dt = datetime.strptime(etime,'%H:%M')
 			etime_dt = etime_dt + timedelta(hours=offset)
 
+			# Added by LO
+			duration = int((etime_dt - stime_dt).total_seconds())
+			 # nasty duration hack to avoid crazy values
+			while duration > 86400:
+				duration -= 86400
+			if duration < 0:
+				duration = 86400 + duration
+
+
 		elif 'duration' in d.keys():
 			etime_dt = stime_dt + timedelta(seconds=float(d['duration'][i]))
 			etime = str(etime_dt.time())
@@ -214,12 +223,19 @@ def main():
 		except:
 			weightpatt = 'square_39p1'
 
-		# Parse the Position coordinates
+		# Parse the Position coordinates (accounting now for ha)
+		hadec = ''
 		try: 
 			ra = float(d['ra'][i])
 			dec = float(d['dec'][i])
 		except:
-			if d['ra'][i] == '-':
+			if 'ha' in d.keys():
+				print('Detecting an HADEC observation!')
+				ra = float(d['ha'][i])
+				dec = float(d['dec'][i])
+				hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+
+			elif d['ra'][i] == '-':
 				print('No coordinates specified... maybe a pointing observation?')
 
 			elif 'deg' in d['ra'][i]:
@@ -243,6 +259,14 @@ def main():
 		# Imaging specific things
 		if args.mode == 'imaging':
 			src_obstype = d['type'][i]
+
+			if 'freqmode' in d.keys():
+				if d['freqmode'] == 300:
+					extra = '--end_band=24'
+				elif d['freqmode'] == 200:
+					extra = ''
+			else:
+				extra = '--end_band=24'
 			#lo = d['lo'][i]
 			#sub1 = d['sub1'][i]
 			#field = d['intent'][i].upper()
@@ -254,16 +278,24 @@ def main():
 
 				# Send the relevant data to the pointing function
 				observing_mode = 'imaging_pointing'
-				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly)
+				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
 
 				# We don't want to proceed with the code once the pointing is done!
 				break
 
 			elif src_obstype == 'O':
 				print('Operations tests mode identified!')
-				beams = [0,randint(1,40)]
-				patterns = [weightdict['compound'],weightdict['XXelement'],weightdict['YYelement']]
-				generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,args.telescopes,observing_mode,parsetonly)
+				offbeam = randint(1,40)
+				offbeam = 11
+				beamname = 'B0%.2d' % offbeam
+				beams = [0,offbeam]#,0]
+				ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+				ra_new2,dec_new2 = calc_pos(ra,dec,beamname)
+				ras = [ra,ra,[ra_new1,ra_new2]]
+				decs = [dec,dec,[dec_new1,dec_new2]]
+				names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
+				patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['YYelement']]
+				generate_tests(names,ras,decs,duration,patterns,beams,sdate_dt,ints,out,args.telescopes,observing_mode,parsetonly,extra,hadec)
 
 
 			# System offset stuff
@@ -284,7 +316,7 @@ def main():
 					ra,dec = ra_new,dec_new
 					refbeam = '0'
 
-			elif d['switch_type'][i] == '-':
+			elif d['switch_type'][i] == '-' or d['switch_type'][i] == -1.0:
 				print('No switching!')
 			else:
 				print('Switch type error!')
@@ -380,9 +412,9 @@ def main():
 				# Write sources to file
 				if system_offset == True:
 					refbeam = str(chosenbeam)
-					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)		
+					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly,extra,hadec)		
 				else:
-					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra_new,dec_new,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)		
+					scannum = writesource_imaging(sdate.date(),sdate.time(),edate.date(),edate.time(),src,ra_new,dec_new,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly,extra,hadec)		
 
 				# update parameters
 				old_etime = str(edate.time())
@@ -394,7 +426,7 @@ def main():
 
 			# Write sources to file
 			if args.mode == 'imaging':
-				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly)
+				scannum = writesource_imaging(str(sdate_dt.date()),str(sdate_dt.time()),str(edate_dt.date()),str(edate_dt.time()),src,ra,dec,ints,weightpatt,refbeam,out,args.telescopes,observing_mode,parsetonly,extra,hadec)
 				j+=1
 			elif args.mode == 'SC4':
 
@@ -403,7 +435,7 @@ def main():
 					start_tid = 1
 					start_tnum = 0
 
-				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration,parsetonly)		
+				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration,parsetonly,hadec)		
 				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid,start_tnum,parsetonly)		
 				j+=1
 				start_tnum+=1

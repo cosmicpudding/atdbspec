@@ -88,8 +88,9 @@ def calc_pos_compound(src_ra,src_dec,beam):
 
 	# supposedly this undoes the phase sign flip but don't think it works
 	# Modify this: not offsets, so signs should be reversed 25/01/17
-	bm_dHA = 1.0 * cbm_dHA[bm_nr] # Changing minus sign to deal with system issues 14/12/2018
+	bm_dHA = -1.0 * cbm_dHA[bm_nr] # Changing minus sign to deal with system issues 14/12/2018
 	bm_dDec = -1.0 * cbm_dDec[bm_nr] 
+	# Note changing both signs of minus. 
 
 	# Add the offsets
 	phc_ra = src_ra + bm_dHA / np.cos(np.deg2rad(src_dec))

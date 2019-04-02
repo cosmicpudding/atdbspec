@@ -17,13 +17,18 @@ import numpy as np
 # RA/DEC conversions
 
 def ra2dec(ra):
-    if not ra:
-        return None
-      
-    r = ra.split(':')
-    if len(r) == 2:
-        r.append(0.0)
-    return (float(r[0]) + float(r[1])/60.0 + float(r[2])/3600.0)*15
+	if not ra:
+		return None
+	  
+	r = ra.split(':')
+	if len(r) == 2:
+		r.append(0.0)
+
+	# Deal with when RA is actually HA and negative
+	if r[0].startswith('-') or float(r[0]) < 0: 
+		return (float(r[0]) - float(r[1])/60.0 - float(r[2])/3600.0)*15
+	else:
+		return (float(r[0]) + float(r[1])/60.0 + float(r[2])/3600.0)*15
 
 def dec2dec(dec):
     if not dec:
@@ -40,21 +45,31 @@ def dec2dec(dec):
 ###################################################################
 # Write source: Imaging
 
-def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly):
+def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly,extra,hadec):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes,parsetonly))
+	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod %s %s %s\n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes,parsetonly,extra,hadec))
 	out.flush()
 
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,duration,parsetonly):
+def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,duration,parsetonly,hadec):
 
 
+	# # Write to file (not plus=)
+	# out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod %s %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parsetonly,hadec))
+	# out.flush()
+
+	# check if drift scan
+	if 'drift' in src.lower():
+		# Write to file (not plus=)
+		out.write("""atdb_service --field_name=%s --field_ha=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template  --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+		out.flush()
+	else:
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parsetonly))
-	out.flush()
+		out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
+		out.flush()
 
 	return scan
 
@@ -105,7 +120,7 @@ start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --t
 
 ###################################################################
 # Convert pointing observation into a series of observations
-def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode,parsetonly):
+def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode,parsetonly,hadec):
 
 	# Location (WSRT)
 	lat = 52.91474
@@ -192,12 +207,12 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 		print(x[6],x[0],x[1],x[2],x[3],'s',x[4],x[5])
 		refbeam = '0'
 
-		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly)
+		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly,hadec)
 
 
 ###################################################################
 # Create test observations
-def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode,parsetonly):
+def generate_tests(names,ras,decs,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode,parsetonly,extra,hadec):
 
 	start = sdate_dt
 	end = sdate_dt + timedelta(seconds=int(duration))
@@ -205,17 +220,23 @@ def generate_tests(src,ra,dec,duration,patterns,beams,sdate_dt,ints,out,telescop
 	for i in range(0,len(beams)):
 
 		for j in range(0,len(patterns)):
-
 			beam = beams[i]
 			pattern = patterns[j]
-			print(beam,pattern)
-
-			if beam != 0:
-				name = src + '_%i' % beam
+			if i == (len(beams)-1) and len(beams) > 2:
+				if pattern == 'square_39p1':
+					ra = ras[i][0]
+					dec = decs[i][0]
+				else:
+					ra = ras[i][1]
+					dec = decs[i][1]									
 			else:
-				name = src
+				ra = ras[i]
+				dec = decs[i]
+			print(beam,pattern,ra,dec)
 
-			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode,parsetonly)
+			name = names[i]
+
+			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode,parsetonly,extra,hadec)
 
 			start = end + timedelta(seconds=120)
 			end = start + timedelta(seconds=int(duration))
