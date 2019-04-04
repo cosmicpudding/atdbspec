@@ -30,16 +30,16 @@ def main():
 			default='input/start.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='SC4',
+			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789',
+			default='23456789ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=False,
+		default=True,
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
 		default=False,
