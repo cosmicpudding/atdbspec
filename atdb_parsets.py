@@ -27,7 +27,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/start.csv',
+			default='input/imaging_sched_longcal_ppmod30_04-08_21h_EAKA.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
@@ -39,7 +39,7 @@ def main():
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=True,
+		default=False,
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
 		default=False,
@@ -261,9 +261,9 @@ def main():
 			src_obstype = d['type'][i]
 
 			if 'freqmode' in d.keys():
-				if d['freqmode'] == 300:
+				if d['freqmode'][i] == 300:
 					extra = '--end_band=24'
-				elif d['freqmode'] == 200:
+				elif d['freqmode'][i] == 200:
 					extra = ''
 			else:
 				extra = '--end_band=24'
@@ -356,6 +356,11 @@ def main():
 			obslength = (etime_dt-stime_dt).seconds/3600.
 			swtime = (obslength * 60. - 2 * (nbeams-1)) / nbeams
 			step = swtime/60.
+
+			# Step should not have microseconds!
+			step = int(step*3600.)/3600.
+
+			# Cal scans
 			numscans = obslength / (step + bttime/60.)# + 1 # edge effect
 			print(step, step*60.,numscans,obslength)
 			
