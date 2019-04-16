@@ -27,19 +27,19 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/imaging_sched_longcal_ppmod30_04-08_21h_EAKA.csv',
+			default='input/ARTS_Survey_20190415.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
+			default='SC4',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
+			default='23456789',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=False,
+		default=True,
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
 		default=False,
@@ -229,10 +229,14 @@ def main():
 			ra = float(d['ra'][i])
 			dec = float(d['dec'][i])
 		except:
-			if 'ha' in d.keys():
+			if 'ha' in d.keys() and d['ha'][i] != '-':
 				print('Detecting an HADEC observation!')
-				ra = float(d['ha'][i])
-				dec = float(d['dec'][i])
+				try:
+					ra = float(d['ha'][i])
+					dec = float(d['dec'][i])
+				except:
+					ra = float(ra2dec(d['ha'][i]))
+					dec = float(dec2dec(d['dec'][i]))
 				hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
 			elif d['ra'][i] == '-':
@@ -467,12 +471,12 @@ def main():
 		cmd = "rsync -avzP %s apertif@wcudata1.apertif:~/atdb_client/scripts/" % outname
 		os.system(cmd)
 
-		if args.mode == 'SC4':
+		#if args.mode == 'SC4':
 
 			# Also do the same for SC4 cluster
 			# Note: this assumes you have ssh key forwarding activated for arts user account
-			cmd = 'rsync -avzP %s arts@arts041.apertif:~/observations/scripts/' % outname2
-			os.system(cmd)		
+			#cmd = 'rsync -avzP %s arts@arts041.apertif:~/observations/scripts/' % outname2
+			#os.system(cmd)		
 
 
 if __name__ == '__main__':
