@@ -6,10 +6,11 @@ __author__ = "V.A. Moss"
 __date__ = "$19-dec-2018 17:00:00$"
 __version__ = "1.2"
 
-from datetime import datetime,timedelta
 import sys
 from astropy.io import ascii
 from modules.visfunc import *
+from modules.beamcalc import *
+from datetime import datetime,timedelta
 import numpy as np
 
 ###################################################################
@@ -19,6 +20,7 @@ class Observation:
 
 		self.src = None
 		self.ra = None
+		self.ratype = 'field_ra'
 		self.dec = None
 		self.refbeam = None
 		self.sdate = None
@@ -28,9 +30,22 @@ class Observation:
 		self.intfac = None
 		self.telescopes = None
 		self.centfreq = None
-		self.parsetonly = ''
-		self.extra = ''
-		self.hadec = ''
+		self.obstype = None
+		self.systemoffset = None
+		self.parsetonly = None
+		self.extra = None
+		self.hadec = None
+
+		# SC4 specific parameters
+		self.sbeam = None
+		self.ebeam = None
+		self.pulsar = None
+
+		# SC1 specific parameters
+		self.sband = None
+		self.eband = None
+		self.parfile = None
+
 		self.out = None
 
 
@@ -66,50 +81,35 @@ def dec2dec(dec):
 ###################################################################
 # Write source: Imaging
 
-def writesource_imaging(date,stime,date2,etime,src,ra,dec,ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly,extra,hadec):
+def writesource_imaging(obs):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --endtime='%s %s' --pattern=%s --observing_mode=%s --integration_factor=%s --telescopes=%s --central_frequency=1400 --data_dir=/data/apertif/ --operation=specification --atdb_host=prod %s %s %s\n\n""" % (src,ra,dec,refbeam,date,stime,date2,etime,weightpatt,observing_mode,ints,telescopes,parsetonly,extra,hadec))
-	out.flush()
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --endtime='{obs.edate}' --pattern={obs.weightpatt} --observing_mode={obs.obsmode} --integration_factor={obs.intfac} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data/apertif/ --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+	obs.out.flush()
 
 ###################################################################
 # Write source: SC4
 
-def writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,duration,parsetonly,hadec):
+def writesource_sc4(obs):
 
-
-	# # Write to file (not plus=)
-	# out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=IAB --operation=specification --atdb_host=prod %s %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parsetonly,hadec))
-	# out.flush()
-
-	# check if drift scan
-	if 'drift' in src.lower():
-		# Write to file (not plus=)
-		out.write("""atdb_service --field_name=%s --field_ha=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template  --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
-		out.flush()
-	else:
 	# Write to file (not plus=)
-		out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --central_frequency=1400 --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes))
-		out.flush()
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} ---data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+	obs.out.flush()
 
-	return scan
 
 ###################################################################
 # Write source: SC1
 
-def writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sband,eband,parfile,duration,parsetonly):
+def writesource_sc1(obs):
 
 	# Write to file (not plus=)
-	out.write("""atdb_service --field_name=%s --field_ra=%.6f --field_dec=%.6f --field_beam=%s --starttime='%s %s' --duration=%s --pattern=%s --integration_factor=%s --observing_mode=%s --telescopes=%s --par_file_name=%s  --start_band=%s --end_band=%s --science_mode=TAB --number_of_bins=1024 --central_frequency=1400 --ndps=1 --irods_coll=arts_main/arts_sc1 --data_dir=/data/01/Timing --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod %s\n\n""" % (src,ra,dec,refbeam,date,stime,duration,weightpatt,ints,observing_mode,telescopes,parfile,sband,eband,parsetonly))
-	out.flush()
-
-	return scan
-
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --science_mode=TAB --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+	obs.out.flush()
 
 ###################################################################
-# Write source: SC4
+# Write source: SC4 (depreciated)
 
-def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum,parsetonly):
+def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum,parsetonly):
 
 	# Cluster start time
 	sdate_dt = datetime.strptime(str(date)+str(stime),'%Y-%m-%d%H:%M:%S')
@@ -233,10 +233,10 @@ def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mod
 
 ###################################################################
 # Create test observations
-def generate_tests(names,ras,decs,duration,patterns,beams,sdate_dt,ints,out,telescopes,observing_mode,parsetonly,extra,hadec):
+def generate_tests(names,ras,decs,patterns,beams,obs):
 
-	start = sdate_dt
-	end = sdate_dt + timedelta(seconds=int(duration))
+	start = obs.sdate
+	end = obs.sdate + timedelta(seconds=int(obs.duration))
 
 	for i in range(0,len(beams)):
 
@@ -257,11 +257,131 @@ def generate_tests(names,ras,decs,duration,patterns,beams,sdate_dt,ints,out,tele
 
 			name = names[i]
 
-			writesource_imaging(start.date(),start.time(),end.date(),end.time(),name,ra,dec,ints,pattern,beam,out,telescopes,observing_mode,parsetonly,extra,hadec)
+			# Update the values
+			obs.sdate = start
+			obs.edate = end
+			obs.ra = ra
+			obs.dec = dec
+			obs.src = name
+			obs.refbeam = beam 
+			obs.weightpatt = pattern
+
+			writesource_imaging(obs)
 
 			start = end + timedelta(seconds=120)
-			end = start + timedelta(seconds=int(duration))
+			end = start + timedelta(seconds=int(obs.duration))
 
+###################################################################
+# Beam switching functionality
+
+def make_beamswitch(obs):
+
+	# Initialise
+	old_edate = None
+	old_etime = None
+	srcname = obs.src
+	total_sdate = obs.sdate
+	total_edate = obs.edate
+
+	# beam switching time (only relevant for imaging)
+	bttime_set = 2 # min
+	rndbm_set = list(np.arange(0,40)) # list(np.arange(0,40))
+
+	# Randomise beams if there is a ? in the specification
+	if '?' in obs.obstype:
+		rndbm = [0]
+		bm = 0
+		for jj in range(0,int(numscans)):
+			print('Finding beams...')
+
+			# Note: this cannot handle 37 beams yet...
+			while bm in rndbm:
+				bm = int(rand()*36)
+			rndbm.append(bm)
+	elif obs.obstype == 'Ss':
+		rndbm = rndbm_subset
+		bttime = bttime_subset
+	elif obs.obstype == 'S*':
+		rndbm = rndbm_set	
+		bttime = bttime_set				
+	else:
+		rndbm = rndbm_set	
+		bttime = bttime_set
+	nbeams = len(rndbm)
+	print('Selected beams: ',rndbm)
+	print('Number of beams: ',nbeams)	
+
+	swtime = ((obs.duration / 60.) - 2 * (nbeams-1)) / nbeams
+	step = swtime/60.
+
+	# Step should not have microseconds!
+	step = int(step*3600.)/3600.
+
+	# Cal scans
+	numscans = (obs.duration / 3600.) / (step + bttime/60.)# + 1 # edge effect
+	print(step, step*60.,numscans,obs.duration / 60.)
+	
+	# Write the observations to a file:
+	for k in range(0,int(numscans)+1):
+
+		# Need to divide by num beams to decide which beam it will do?
+		print(k)
+		print(k % len(rndbm))
+		chosenbeam = rndbm[k % len(rndbm)]
+		print('chosen beam:',chosenbeam)
+
+		beamname = 'B0%.2d' % chosenbeam
+		obs.src = '%s_%s' % (srcname,chosenbeam)
+
+		print(beamname,obs.src)
+
+		# Calculate the new position for that given beam
+		# Note: using compound beam positions
+		ra_new,dec_new = calc_pos_compound(obs.ra,obs.dec,beamname)
+		print(ra_new,dec_new)
+
+		# New execute time
+		print(old_edate,old_etime)
+
+		# Recalculate the start and end time
+		if k == 0:
+
+			try:
+				exectime = obs.sdate
+			except ValueError:
+				exectime = datetime.strptime(sdate+stime,'%Y-%m-%d%H:%M')
+
+			sdate = exectime
+			edate = exectime + timedelta(minutes=step*60.)
+
+		else:
+			try:
+				exectime = datetime.strptime(old_edate+old_etime,'%Y-%m-%d%H:%M:%S')#+timedelta(seconds=15)
+			except ValueError:
+				exectime = datetime.strptime(old_edate+old_etime,'%Y-%m-%d%H:%M')
+			sdate = exectime + timedelta(minutes=bttime)
+			edate = exectime + timedelta(minutes=step*60.+bttime)
+
+		# Check if the time has reached the right place
+		if edate > total_edate or k > nbeams-1:
+			continue
+
+		# Update the obs class values
+		obs.sdate = sdate
+		obs.edate = edate
+		obs.refbeam = chosenbeam
+
+		# Write sources to file
+		if obs.systemoffset == True:
+			refbeam = str(chosenbeam)
+			writesource_imaging(obs)		
+		else:
+			writesource_imaging(obs)		
+
+		# update parameters
+		old_etime = str(edate.time())
+		old_edate = str(edate.date())
+		print(old_edate,old_etime)
 
 
 
