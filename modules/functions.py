@@ -12,6 +12,27 @@ from astropy.io import ascii
 from modules.visfunc import *
 import numpy as np
 
+###################################################################
+class Observation:
+
+	def __init__(self):
+
+		self.src = None
+		self.ra = None
+		self.dec = None
+		self.refbeam = None
+		self.sdate = None
+		self.edate = None
+		self.weightpatt = None
+		self.obsmode = None
+		self.intfac = None
+		self.telescopes = None
+		self.centfreq = None
+		self.parsetonly = ''
+		self.extra = ''
+		self.hadec = ''
+		self.out = None
+
 
 ###################################################################
 # RA/DEC conversions

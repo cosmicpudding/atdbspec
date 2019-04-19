@@ -39,7 +39,7 @@ def main():
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=True,
+		default=False,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
@@ -61,10 +61,8 @@ def main():
 				  'YYelement40': 'central_element_beams_y',
 				  'hybrid': 'hybridXX_20180928_8bit'}
 
-
-	# hack for ARTS cluster mode
-	start_tid = 49
-	start_tnum = 0
+	# Initialise the class to store variables
+	obs = Observation()
 
 	# beam switching time (only relevant for imaging)
 	#swtime_set = 15 # min
@@ -108,15 +106,6 @@ def main():
 	out = open(outname,'w')
 	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
 	out.flush()
-
-	if args.mode == 'SC4':
-
-		# Start the file
-		outname2 = '%s_%s_cluster.sh' % (fname.split('.')[0],args.mode)
-		out2 = open(outname2,'w')
-		out2.write('#!/bin/bash\n# Script to create commands for ARTS SC4 cluster\n# Automatic generation script by V.A. Moss 07/12/2018\n# Last updated by V.A. Moss 11/02/2019\n\nsource $HOME/ARTS-obs/setup_env.sh\n\n')
-		out2.flush()
-
 
 	# Task ID counter
 	j = 0
@@ -460,7 +449,7 @@ def main():
 					start_tnum = 0
 
 				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration,parsetonly,hadec)		
-				scannum2 = writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,d['ra'][i],d['dec'][i],old_date,old_etime,ints,weightpatt,refbeam,renum,out2,observing_mode,args.telescopes,start_beam,end_beam,pulsar,duration,args.cluster_mode,start_tid,start_tnum,parsetonly)		
+
 				j+=1
 				start_tnum+=1
 
