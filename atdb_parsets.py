@@ -27,24 +27,28 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/ARTS_Survey_20190415.csv',
+			default='input/ARTS_Survey_20190420-20190423.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='SC4',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789',
+			default='2345679',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
 		default=True,
+		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
 		default=False,
+		action='store_true',
 		help='Specify whether to only make a parset and not submit it (default: %(default)s)')
-
+	parser.add_argument('-v', '--verification',
+		default=False,
+		help='Specify whether to send a verification/test observation for specified mode (default: %(default)s)')
 
 	# Parse the arguments above
 	args = parser.parse_args()
@@ -223,6 +227,12 @@ def main():
 		except:
 			weightpatt = 'square_39p1'
 
+		# Try to find central frequency
+		if 'centfreq' in d.keys():
+			centfreq = int(d['centfreq'][i])
+		else:
+			centfreq = 1400
+
 		# Parse the Position coordinates (accounting now for ha)
 		hadec = ''
 		try: 
@@ -289,8 +299,13 @@ def main():
 
 			elif src_obstype == 'O':
 				print('Operations tests mode identified!')
-				offbeam = randint(1,40)
-				offbeam = 11
+
+				# Determine if offset beam is chosen or random
+				if d['beam'] != 0:
+					offbeam = d['beam'][i]
+				else:
+					offbeam = randint(1,40)
+
 				beamname = 'B0%.2d' % offbeam
 				beams = [0,offbeam]#,0]
 				ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
@@ -456,6 +471,9 @@ def main():
 		# update parameters
 		old_etime = etime
 		old_date = date2
+
+	# Close the outfile
+	out.close()
 
 	# Make the resultting file executables
 	os.system('chmod oug+x %s' % outname)
