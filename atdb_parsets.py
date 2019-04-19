@@ -451,7 +451,6 @@ def main():
 				scannum = writesource_sc4(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,duration,parsetonly,hadec)		
 
 				j+=1
-				start_tnum+=1
 
 			elif args.mode == 'SC1':
 				scannum = writesource_sc1(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,renum,out,observing_mode,args.telescopes,sband,eband,parfile,duration,parsetonly)		
@@ -466,10 +465,6 @@ def main():
 
 	# Make the resultting file executables
 	os.system('chmod oug+x %s' % outname)
-
-	# If SC4, then cluster file exists
-	if args.mode == 'SC4':
-		os.system('chmod oug+x %s' % outname2)
 
 	if args.upload:
 
