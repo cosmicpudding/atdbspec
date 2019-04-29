@@ -27,7 +27,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/sched_190419_polafter_modified_test.csv',
+			default='input/sched_190428_LH.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
@@ -39,7 +39,7 @@ def main():
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=False,
+		default=True,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
@@ -247,6 +247,7 @@ def main():
 		try: 
 			ra = float(d['ra'][i])
 			dec = float(d['dec'][i])
+			obs.ratype = 'field_ra'
 		except:
 			if 'ha' in d.keys() and d['ha'][i] != '-':
 				print('Detecting an HADEC observation!')
@@ -267,16 +268,19 @@ def main():
 			elif 'deg' in d['ra'][i]:
 				ra = float(d['ra'][i].split('deg')[0])
 				dec = float(d['dec'][i].split('deg')[0])
+				obs.ratype = 'field_ra'
 
 			# With :
 			elif ':' in d['ra'][i]:
 				ra = ra2dec(d['ra'][i])
 				dec = dec2dec(d['dec'][i])
+				obs.ratype = 'field_ra'
 
 			# With HMS
 			elif 'h' in d['ra'][i]: 
 				ra = ra2dec(d['ra'][i].replace('h',':').replace('m',':').replace('s',''))
 				dec = dec2dec(d['dec'][i].replace('d',':').replace('m',':').replace('s',''))
+				obs.ratype = 'field_ra'
 
 			else:
 				print('Error parsing coordinates!')
@@ -334,8 +338,10 @@ def main():
 				ras = [ra,ra,[ra_new1,ra_new2]]
 				decs = [dec,dec,[dec_new1,dec_new2]]
 				names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
-				patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['YYelement']]
+				patterns = [weightdict['compound'],weightdict['XXelement']]#, weightdict['YYelement']]
 				generate_tests(names,ras,decs,patterns,beams,obs)
+
+				break
 
 
 			# System offset stuff
