@@ -27,7 +27,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/sched_190428_LH.csv',
+			default='input/test_20190503_v4.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
@@ -59,7 +59,8 @@ def main():
 				  'YYelement': 'central_element_beams_y',
 				  'XXelement40': 'central_element_beams_x',
 				  'YYelement40': 'central_element_beams_y',
-				  'hybrid': 'hybridXX_20180928_8bit'}
+				  'hybrid': 'hybridXX_20180928_8bit',
+				  'compound_element_x_subset' : 'compound_element_x_subset'}
 
 	# Initialise the class to store variables
 	obs = Observation()
@@ -338,7 +339,7 @@ def main():
 				ras = [ra,ra,[ra_new1,ra_new2]]
 				decs = [dec,dec,[dec_new1,dec_new2]]
 				names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
-				patterns = [weightdict['compound'],weightdict['XXelement']]#, weightdict['YYelement']]
+				patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['XXelement']]#, weightdict['YYelement']]
 				generate_tests(names,ras,decs,patterns,beams,obs)
 
 				break
