@@ -12,6 +12,7 @@ from astropy.io import ascii
 import numpy as np
 from argparse import ArgumentParser, RawTextHelpFormatter
 from modules.functions import *
+from modules.drift import calc_drift
 from datetime import datetime,timedelta
 import time
 
