@@ -12,6 +12,7 @@ from astropy.io import ascii
 import numpy as np
 from argparse import ArgumentParser, RawTextHelpFormatter
 from modules.functions import *
+from modules.drift import calc_drift
 from datetime import datetime,timedelta
 import time
 
@@ -27,13 +28,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/test_20190503_v4.csv',
+			default='input/test_20190507_drift_v3.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
+			default='23456789ABD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -343,6 +344,69 @@ def main():
 				generate_tests(names,ras,decs,patterns,beams,obs)
 
 				break
+
+			elif src_obstype == 'D' or src_obstype == 'D*':
+				print('Drift mode identified!')
+
+				# Single drift through a row
+				if src_obstype == 'D':
+					try:
+						n_drift = d['n_drift'][i]
+					except:
+						n_drift = 1
+
+					ha,duration = calc_drift((ra,dec),sdate_dt,n_drift)
+					print(ra2dec(ha),duration)
+
+					# Deal with ref beam 					
+					beamname = 'B0%.2d' % obs.refbeam
+					ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+					offset = '%+.2d' % ((dec - dec_new1)*60.)
+
+					# Change the variables
+					obs.ratype='field_ha'
+					obs.ra = ra2dec(ha)
+					obs.duration = duration
+					obs.edate = sdate_dt + timedelta(seconds=int(duration))
+					obs.src = obs.src+'drift'+offset
+					obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+
+					scannum = writesource_imaging(obs)
+
+				elif src_obstype == 'D*':
+					refbeams = [0,7,14,20,26,32,39]
+					nbeams = [1,7,7,6,6,6,7]
+					currdate_dt = sdate_dt
+					truename = obs.src
+
+					for ii in range(0,len(refbeams)):
+						
+						obs.refbeam = refbeams[ii]
+						n_drift = nbeams[ii]
+
+						ha,duration = calc_drift((ra,dec),currdate_dt,n_drift)
+						print(ra2dec(ha),duration)
+
+						# Deal with ref beam 
+						beamname = 'B0%.2d' % obs.refbeam
+						ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+						offset = '%+.2d' % ((dec - dec_new1)*60.)
+
+						# Change the variables
+						obs.ratype='field_ha'
+						obs.ra = ra2dec(ha)
+						obs.duration = duration
+						obs.sdate = currdate_dt
+						obs.edate = currdate_dt + timedelta(seconds=int(duration))
+						obs.src = truename+'drift'+offset
+						obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+
+						scannum = writesource_imaging(obs)
+
+						# update the time
+						currdate_dt = obs.edate + timedelta(seconds=120)
+
+				continue
 
 
 			# System offset stuff
