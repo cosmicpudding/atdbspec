@@ -7,7 +7,7 @@ __version__ = "1.0"
 import numpy as np
 import astropy.units as u
 from astropy.time import Time
-from astropy.coordinates import EarthLocation, SkyCoord, Angle
+from astropy.coordinates import EarthLocation, SkyCoord, Angle, FK5
 
 
 # Location of WSRT
@@ -20,7 +20,6 @@ def calc_drift(coord, tstart, num_beam=1, margin="60'"):
     """
     Generate a drift scan observation
     :param coord: (ra, dec) in decimal degrees (float, float)
-    :param source: Coordinates of source to observe (astropy.coordinates.SkyCoord)
     :param tstart: Start time of observation (convertible to astropy.time.Time)
     :param num_beam: Number of compound beam sizes to drift through (int) [optional, default: 1]
     :param margin: Offset from center of beam to start drift at (convertible to astropy angle) [optional, default: 60 arcmin]
@@ -74,10 +73,15 @@ def ra_to_ha(ra, time):
     ha: Hour angle (astropy quantity)
     """
 
+    # Convert J2000 to RA at start time
+    equinox = 'J{}'.format(time.decimalyear)
+    tmpcoord = SkyCoord(ra, 0*u.deg)
+    ra_apparent = tmpcoord.transform_to(FK5(equinox=equinox)).ra
+
     # get LST at WSRT
     lst = time.sidereal_time('apparent', WSRT.lon)
     # Convert HA to RA
-    ha = lst - ra
+    ha = lst - ra_apparent
     # wrap in range [-180, 180] deg
     ha.wrap_at('180d', inplace=True)
 
