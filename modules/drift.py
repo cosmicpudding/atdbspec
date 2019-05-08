@@ -16,14 +16,14 @@ WSRT = EarthLocation(lat=52.91460037 * u.deg, lon=6.60449982 * u.deg, height=16.
 CBSIZE = Angle("33.7'")
 
 
-def calc_drift(coord, tstart, num_beam=1, margin="30'"):
+def calc_drift(coord, tstart, num_beam=1, margin="60'"):
     """
     Generate a drift scan observation
     :param coord: (ra, dec) in decimal degrees (float, float)
     :param source: Coordinates of source to observe (astropy.coordinates.SkyCoord)
     :param tstart: Start time of observation (convertible to astropy.time.Time)
     :param num_beam: Number of compound beam sizes to drift through (int) [optional, default: 1]
-    :param margin: Extra offset at start and end of scan (convertible to astropy angle) [optional, default: 30 arcmin]
+    :param margin: Offset from center of beam to start drift at (convertible to astropy angle) [optional, default: 60 arcmin]
 
     returns:
     start_ha: hour angle at start time of observation in hh:mm:ss (str)
@@ -42,13 +42,15 @@ def calc_drift(coord, tstart, num_beam=1, margin="30'"):
     if not isinstance(margin, Angle):
         margin = Angle(margin)
 
-    # get the duration and size of drift in RA, scaled by cos dec (slower drift near poles)
-    duration, shift = calc_length(source.dec, num_beam, margin)
+    # get the duration of from the source dec and scan size
+    duration = calc_duration(source.dec, num_beam, margin)
 
     # calculate start RA:
-    # duration gives total RA shift during observation (15 arcmin / min)
-    # starting point is source RA minus half the total shift
-    start_ra = (source.ra - 0.5 * shift)
+    # margin is offset from center of first beam to start of observation
+    # take care of cos(Dec) factor
+    shift = margin / np.cos(source.dec)
+    # starting point is source RA minus the shift
+    start_ra = (source.ra - shift)
 
     # convert to hour angle
     start_ha = ra_to_ha(start_ra, tstart)
@@ -82,7 +84,7 @@ def ra_to_ha(ra, time):
     return ha
 
 
-def calc_length(dec, num_beam, margin):
+def calc_duration(dec, num_beam, margin):
     """
     Calculate required duration of drift scan and associated size on sky
     :param dec: Source declination (astropy quantity)
@@ -95,9 +97,11 @@ def calc_length(dec, num_beam, margin):
     """
 
     # calculate total size of scan
-    size = (num_beam * CBSIZE + 2*margin).to(u.arcmin) / np.cos(dec)
+    # margin already includes first half of first beam and last half of last beam, 
+    # so lower num_beam by one
+    size = ((num_beam-1) * CBSIZE + 2*margin).to(u.arcmin) / np.cos(dec)
     # convert to duration using Earth drift rate of 360 deg / 24 hour
     duration = (size / (15*u.arcmin/u.minute)).to(u.second)
 
-    return duration, size
+    return duration
     
