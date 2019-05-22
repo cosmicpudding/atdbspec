@@ -28,13 +28,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/test_20190507_drift_v3.csv',
+			default='input/drift_20190521.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABD',
+			default='23456789ABCD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -247,9 +247,18 @@ def main():
 		obs.hadec = ''
 
 		try: 
-			ra = float(d['ra'][i])
-			dec = float(d['dec'][i])
-			obs.ratype = 'field_ra'
+			if 'ha' in d.keys() and d['ha'][i] != '-':
+
+				print('Detecting an HADEC observation!')
+				ra = float(d['ha'][i])
+				dec = float(d['dec'][i])
+
+				obs.ratype = 'field_ha'
+
+			else:
+				ra = float(d['ra'][i])
+				dec = float(d['dec'][i])
+				obs.ratype = 'field_ra'
 		except:
 			if 'ha' in d.keys() and d['ha'][i] != '-':
 				print('Detecting an HADEC observation!')
@@ -259,8 +268,8 @@ def main():
 				except:
 					ra = float(ra2dec(d['ha'][i]))
 					dec = float(dec2dec(d['dec'][i]))
-				hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
-				obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+				#hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+				#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
 				obs.ratype = 'field_ha'
 
@@ -369,7 +378,7 @@ def main():
 					obs.duration = duration
 					obs.edate = sdate_dt + timedelta(seconds=int(duration))
 					obs.src = obs.src+'drift'+offset
-					obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+					#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
 					scannum = writesource_imaging(obs)
 

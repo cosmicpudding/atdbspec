@@ -16,7 +16,7 @@ WSRT = EarthLocation(lat=52.91460037 * u.deg, lon=6.60449982 * u.deg, height=16.
 CBSIZE = Angle("33.7'")
 
 
-def calc_drift(coord, tstart, num_beam=1, margin="60'"):
+def calc_drift(coord, tstart, num_beam=1, margin="120'"):
     """
     Generate a drift scan observation
     :param coord: (ra, dec) in decimal degrees (float, float)

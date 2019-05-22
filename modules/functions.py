@@ -93,7 +93,7 @@ def writesource_imaging(obs):
 def writesource_sc4(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
 	obs.out.flush()
 
 
@@ -286,6 +286,9 @@ def make_beamswitch(obs):
 	# beam switching time (only relevant for imaging)
 	bttime_set = 2 # min
 	rndbm_set = list(np.arange(0,40)) # list(np.arange(0,40))
+
+	# Random subset
+	rndbm_set = np.random.choice(rndbm_set,17,replace=False)
 
 	# Randomise beams if there is a ? in the specification
 	if '?' in obs.obstype:
