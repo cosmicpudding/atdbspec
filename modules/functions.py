@@ -103,7 +103,7 @@ def writesource_sc4(obs):
 def writesource_sc1(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --science_mode=TAB --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
 	obs.out.flush()
 
 ###################################################################
@@ -288,7 +288,7 @@ def make_beamswitch(obs):
 	rndbm_set = list(np.arange(0,40)) # list(np.arange(0,40))
 
 	# Random subset
-	rndbm_set = np.random.choice(rndbm_set,17,replace=False)
+	#rndbm_set = np.random.choice(rndbm_set,17,replace=False)
 
 	# Randomise beams if there is a ? in the specification
 	if '?' in obs.obstype:

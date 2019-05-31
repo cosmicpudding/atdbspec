@@ -28,13 +28,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/drift_20190521.csv',
+			default='input/ARTS_SC1_20190530_test_v2.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
+			default='SC1',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
+			default='23456789',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -184,13 +184,17 @@ def main():
 			obs.pulsar = d['pulsar'][i]
 
 		elif args.mode == 'SC1':
-			observing_mode = 'arts_sc1_timing'
+			if d['mode'][i] == 'timing':
+				observing_mode = 'arts_sc1_timing'
+				obs.obsmode = 'arts_sc1_timing'
+			elif d['mode'][i] == 'baseband':
+				observing_mode = 'arts_sc1_baseband'
+				obs.obsmode = 'arts_sc1_baseband'
 			sband = d['sband'][i]
 			eband = d['eband'][i]
 			parfile = d['par'][i]
 
 			# Class replacements
-			obs.obsmode = 'arts_sc1_timing'
 			obs.sband = d['sband'][i]
 			obs.eband = d['eband'][i]
 			obs.parfile = d['par'][i]
