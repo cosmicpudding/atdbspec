@@ -412,7 +412,7 @@ def main():
 						obs.sdate = currdate_dt
 						obs.edate = currdate_dt + timedelta(seconds=int(duration))
 						obs.src = truename+'drift'+offset
-						obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+						#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
 						scannum = writesource_imaging(obs)
 
