@@ -28,13 +28,13 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/ARTS_SC1_20190530_test_v2.csv',
+			default='input/test_20190531_v8.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='SC1',
+			default='imaging',
 			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789',
+			default='23456789ABD',
 			help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
@@ -62,6 +62,21 @@ def main():
 				  'YYelement40': 'central_element_beams_y',
 				  'hybrid': 'hybridXX_20180928_8bit',
 				  'compound_element_x_subset' : 'compound_element_x_subset'}
+
+	# Expected telescopes
+	scopesdict = {'imaging':'23456789ABCD',
+				  'SC1': '23456789',
+				  'SC4': '23456789'}
+
+	# Check if default doesn't match and warn user
+	expected_scopes = scopesdict[args.mode]
+	if args.telescopes != expected_scopes:
+		print('WARNING!!!\nExpected telescopes: %s\nSpecified telescopes: %s\n' % (expected_scopes,args.telescopes))
+		proceed = input('Do you want to proceed? (y/n) ')
+
+		if proceed != 'y':
+			print('... exiting!')
+			sys.exit()
 
 	# Initialise the class to store variables
 	obs = Observation()
