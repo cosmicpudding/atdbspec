@@ -10,8 +10,19 @@ import sys
 from astropy.io import ascii
 from modules.visfunc import *
 from modules.beamcalc import *
+from modules.getcal import *
 from datetime import datetime,timedelta
 import numpy as np
+
+
+# Weight pattern dictionary
+weightdict = {'compound': 'square_39p1',
+			  'XXelement': 'central_element_beams_x',
+			  'YYelement': 'central_element_beams_y',
+			  'XXelement40': 'central_element_beams_x',
+			  'YYelement40': 'central_element_beams_y',
+			  'hybrid': 'hybridXX_20180928_8bit',
+			  'compound_element_x_subset' : 'compound_element_x_subset'}
 
 ###################################################################
 class Observation:
@@ -386,5 +397,85 @@ def make_beamswitch(obs):
 		old_edate = str(edate.date())
 		print(old_edate,old_etime)
 
+###################################################################
+# Verification observations
 
+def make_verification(obs,mode):
+
+	# Global params
+	obs.centfreq = 1370
+	obs.weightpatt = 'square_39p1'
+	obs.refbeam = 0
+	obs.ratype = 'field_ra'
+	obs.extra = ''
+	obs.hadec = ''
+
+	# Define start time as 5 min from now
+	obs.sdate = datetime.utcnow() + timedelta(minutes=5)
+	fformat = datetime.strftime(obs.sdate,'%Y%m%d_%H%M%S')
+
+	# Start the file
+	outname = 'input/%s_%s_verification.sh' % (fformat,mode)
+	out = open(outname,'w')
+	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
+	out.flush()
+
+	# Add to the class definition
+	obs.out = out
+
+	# First, choose a calibrator
+	if mode == 'imaging':
+		obs.obsmode = 'imaging'
+		bestcal,ra,dec = get_cal()
+		obs.src = bestcal
+		obs.ra = ra
+		obs.dec = dec
+		obs.intfac = 10
+		obs.extra = '--end_band=24'
+		obs.duration = 60
+
+		# Determine if offset beam is chosen or random
+		if obs.refbeam != 0:
+			offbeam = obs.refbeam
+		else:
+			offbeam = randint(1,40)
+		beamname = 'B0%.2d' % offbeam
+		beams = [0,offbeam]
+		ras = [ra,ra]
+		decs = [dec,dec]
+		names = [obs.src,obs.src + '_%i' % offbeam]
+		patterns = [weightdict['compound'],weightdict['XXelement']]
+
+		generate_tests(names,ras,decs,patterns,beams,obs)
+
+	elif mode == 'SC4':
+		obs.obsmode = 'arts_sc4_survey'
+		bestcal,ra,dec = get_cal_arts()
+		obs.src = bestcal
+		obs.ra = ra
+		obs.dec = dec	
+		obs.sbeam = 0
+		obs.ebeam = 39
+		obs.pulsar = True
+		obs.intfac = 30
+		obs.duration = 300
+
+
+		writesource_sc4(obs)	
+
+	elif mode == 'SC1':
+		obs.obsmode = 'arts_sc1_timing'
+		bestcal,ra,dec = get_cal_arts()
+		obs.src = bestcal
+		obs.ra = ra
+		obs.dec = dec			
+		obs.sband = 1
+		obs.eband = 16
+		obs.parfile = obs.src[1:]+'.par'
+		obs.intfac = 20
+		obs.duration = 300
+
+		writesource_sc1(obs)	
+
+	return out,outname
 

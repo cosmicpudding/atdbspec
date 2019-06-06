@@ -48,7 +48,7 @@ def main():
 		action='store_true',
 		help='Specify whether to only make a parset and not submit it (default: %(default)s)')
 	parser.add_argument('-v', '--verification',
-		default=False,
+		default=True,
 		help='Specify whether to send a verification/test observation for specified mode (default: %(default)s)')
 
 	# Parse the arguments above
@@ -106,322 +106,298 @@ def main():
 		parsetonly = ''
 		obs.parsetonly = ''
 
+	# Verification observation
+	if args.verification:
+		out,outname = make_verification(obs,args.mode)
+
 	################################################
-
-	# Read file (either tab or comma separated)
-	try:
-		d = ascii.read(fname,delimiter=',',guess=False)
-	except:
-		d = ascii.read(fname,delimiter='\t',guess=True)
-
-	print(list(d.keys())) 
-
-	# Start the file
-	outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
-	out = open(outname,'w')
-	out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
-	out.flush()
-
-	# Add to the class definition
-	obs.out = out
-
-	# Loop through sources
-	for i in range(0,len(d)):
-
-		# Get the common parameters for all
-		src = d['source'][i]
-		obs.src = d['source'][i]
-
-		# Get the pieces of date time
-		stime = d['time1'][i]
-		sdate = d['date1'][i]
-
-		# Fix times if they aren't the right length
-		if len(stime.split(':')[0]) < 2:
-			stime = '0'+stime
-
-		# Form the datetime object
+	
+	else:
+		# Read file (either tab or comma separated)
 		try:
-			sdate_dt = datetime.strptime(sdate+stime,'%Y-%m-%d%H:%M:%S')
-		except ValueError:
-			sdate_dt = datetime.strptime(sdate+stime,'%Y-%m-%d%H:%M')
-		sdate_dt = sdate_dt + timedelta(hours=offset)		
+			d = ascii.read(fname,delimiter=',',guess=False)
+		except:
+			d = ascii.read(fname,delimiter='\t',guess=True)
 
-		# Endtime or duration
-		if 'time2' in d.keys():
-			etime = d['time2'][i]
-			edate = d['date2'][i]
+		print(list(d.keys())) 
+
+		# Start the file
+		outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
+		out = open(outname,'w')
+		out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
+		out.flush()
+
+		# Add to the class definition
+		obs.out = out
+
+		# Loop through sources
+		for i in range(0,len(d)):
+
+			# Get the common parameters for all
+			src = d['source'][i]
+			obs.src = d['source'][i]
+
+			# Get the pieces of date time
+			stime = d['time1'][i]
+			sdate = d['date1'][i]
 
 			# Fix times if they aren't the right length
-			if len(etime.split(':')[0]) < 2:
-				etime = '0'+etime
+			if len(stime.split(':')[0]) < 2:
+				stime = '0'+stime
 
 			# Form the datetime object
 			try:
-				edate_dt = datetime.strptime(edate+etime,'%Y-%m-%d%H:%M:%S')
+				sdate_dt = datetime.strptime(sdate+stime,'%Y-%m-%d%H:%M:%S')
 			except ValueError:
-				edate_dt = datetime.strptime(edate+etime,'%Y-%m-%d%H:%M')
-			edate_dt = edate_dt + timedelta(hours=offset)
+				sdate_dt = datetime.strptime(sdate+stime,'%Y-%m-%d%H:%M')
+			sdate_dt = sdate_dt + timedelta(hours=offset)		
 
-			# Check for mistaken date
-			if edate_dt <= sdate_dt:
-				print('End date is further in the past than start date... adding a day!')
-				edate_dt = edate_dt + timedelta(days=1)
+			# Endtime or duration
+			if 'time2' in d.keys():
+				etime = d['time2'][i]
+				edate = d['date2'][i]
 
-			# Added by LO
-			duration = int((edate_dt - sdate_dt).total_seconds())
+				# Fix times if they aren't the right length
+				if len(etime.split(':')[0]) < 2:
+					etime = '0'+etime
 
-			# nasty duration hack to avoid crazy values (LO)
-			# Note from VM: I think this depreciates with proper datetime objects
-			# while duration > 86400:
-			# 	duration -= 86400
-			# if duration < 0:
-			# 	duration = 86400 + duration
+				# Form the datetime object
+				try:
+					edate_dt = datetime.strptime(edate+etime,'%Y-%m-%d%H:%M:%S')
+				except ValueError:
+					edate_dt = datetime.strptime(edate+etime,'%Y-%m-%d%H:%M')
+				edate_dt = edate_dt + timedelta(hours=offset)
 
-		elif 'duration' in d.keys():
-			edate_dt = sdate_dt + timedelta(seconds=float(d['duration'][i]))
-			etime = str(edate_dt.time())
-			duration = d['duration'][i]
+				# Check for mistaken date
+				if edate_dt <= sdate_dt:
+					print('End date is further in the past than start date... adding a day!')
+					edate_dt = edate_dt + timedelta(days=1)
 
-		# Assign the results to the class
-		obs.sdate = sdate_dt
-		obs.edate = edate_dt
-		obs.duration = duration
+				# Added by LO
+				duration = int((edate_dt - sdate_dt).total_seconds())
 
-		# Define the obs type (not needed really?)
-		src_obstype = obs.obstype
+				# nasty duration hack to avoid crazy values (LO)
+				# Note from VM: I think this depreciates with proper datetime objects
+				# while duration > 86400:
+				# 	duration -= 86400
+				# if duration < 0:
+				# 	duration = 86400 + duration
 
-		# Observing mode
-		if args.mode == 'SC4':
-			observing_mode = 'arts_sc4_survey'
-			start_beam = d['sbeam'][i]
-			end_beam = d['ebeam'][i]
-			pulsar = d['pulsar'][i]
+			elif 'duration' in d.keys():
+				edate_dt = sdate_dt + timedelta(seconds=float(d['duration'][i]))
+				etime = str(edate_dt.time())
+				duration = d['duration'][i]
 
-			# Class replacements
-			obs.obsmode = 'arts_sc4_survey'
-			obs.sbeam = d['sbeam'][i]
-			obs.ebeam = d['ebeam'][i]
-			obs.pulsar = d['pulsar'][i]
+			# Assign the results to the class
+			obs.sdate = sdate_dt
+			obs.edate = edate_dt
+			obs.duration = duration
 
-		elif args.mode == 'SC1':
-			if d['mode'][i] == 'timing':
-				observing_mode = 'arts_sc1_timing'
-				obs.obsmode = 'arts_sc1_timing'
-			elif d['mode'][i] == 'baseband':
-				observing_mode = 'arts_sc1_baseband'
-				obs.obsmode = 'arts_sc1_baseband'
-			sband = d['sband'][i]
-			eband = d['eband'][i]
-			parfile = d['par'][i]
+			# Define the obs type (not needed really?)
+			src_obstype = obs.obstype
 
-			# Class replacements
-			obs.sband = d['sband'][i]
-			obs.eband = d['eband'][i]
-			obs.parfile = d['par'][i]
-
-		else:
-			observing_mode = 'imaging'
-
-			# Class replacements
-			obs.obsmode = 'imaging'
-
-		# Get ref beam
-		try:
-			refbeam = d['beam'][i]
-
-			# Class replacements
-			obs.refbeam = refbeam
-		except:
-			refbeam = '0'
-
-			# Class replacements
-			obs.refbeam = refbeam
-
-		# Determine the integration factor in seconds
-		try:
-			ints = d['int'][i]
-			obs.intfac = d['int'][i]
-		except: 
+			# Observing mode
 			if args.mode == 'SC4':
-				ints = 30
-				obs.intfac = 30
+				observing_mode = 'arts_sc4_survey'
+				start_beam = d['sbeam'][i]
+				end_beam = d['ebeam'][i]
+				pulsar = d['pulsar'][i]
+
+				# Class replacements
+				obs.obsmode = 'arts_sc4_survey'
+				obs.sbeam = d['sbeam'][i]
+				obs.ebeam = d['ebeam'][i]
+				obs.pulsar = d['pulsar'][i]
+
 			elif args.mode == 'SC1':
-				ints = 20
-				obs.intfac = 20
+				if d['mode'][i] == 'timing':
+					observing_mode = 'arts_sc1_timing'
+					obs.obsmode = 'arts_sc1_timing'
+				elif d['mode'][i] == 'baseband':
+					observing_mode = 'arts_sc1_baseband'
+					obs.obsmode = 'arts_sc1_baseband'
+				sband = d['sband'][i]
+				eband = d['eband'][i]
+				parfile = d['par'][i]
 
-		# Define weight pattern
-		try:
-			weightpatt = weightdict[d['weight'][i]]
-			obs.weightpatt = weightdict[d['weight'][i]]
-		except:
-			weightpatt = 'square_39p1'
-			obs.weightpatt = 'square_39p1'
-
-		# Try to find central frequency
-		if 'centfreq' in d.keys():
-			centfreq = int(d['centfreq'][i])
-			obs.centfreq = int(d['centfreq'][i])
-		else:
-			centfreq = 1400
-			obs.centfreq = 1400
-
-		# Parse the Position coordinates (accounting now for ha)
-		# note that HA is stored as RA in the Obs class, even if it is HA
-		hadec = ''
-		obs.hadec = ''
-
-		try: 
-			if 'ha' in d.keys() and d['ha'][i] != '-':
-
-				print('Detecting an HADEC observation!')
-				ra = float(d['ha'][i])
-				dec = float(d['dec'][i])
-
-				obs.ratype = 'field_ha'
+				# Class replacements
+				obs.sband = d['sband'][i]
+				obs.eband = d['eband'][i]
+				obs.parfile = d['par'][i]
 
 			else:
-				ra = float(d['ra'][i])
-				dec = float(d['dec'][i])
-				obs.ratype = 'field_ra'
-		except:
-			if 'ha' in d.keys() and d['ha'][i] != '-':
-				print('Detecting an HADEC observation!')
-				try:
+				observing_mode = 'imaging'
+
+				# Class replacements
+				obs.obsmode = 'imaging'
+
+			# Get ref beam
+			try:
+				refbeam = d['beam'][i]
+
+				# Class replacements
+				obs.refbeam = refbeam
+			except:
+				refbeam = '0'
+
+				# Class replacements
+				obs.refbeam = refbeam
+
+			# Determine the integration factor in seconds
+			try:
+				ints = d['int'][i]
+				obs.intfac = d['int'][i]
+			except: 
+				if args.mode == 'SC4':
+					ints = 30
+					obs.intfac = 30
+				elif args.mode == 'SC1':
+					ints = 20
+					obs.intfac = 20
+
+			# Define weight pattern
+			try:
+				weightpatt = weightdict[d['weight'][i]]
+				obs.weightpatt = weightdict[d['weight'][i]]
+			except:
+				weightpatt = 'square_39p1'
+				obs.weightpatt = 'square_39p1'
+
+			# Try to find central frequency
+			if 'centfreq' in d.keys():
+				centfreq = int(d['centfreq'][i])
+				obs.centfreq = int(d['centfreq'][i])
+			else:
+				centfreq = 1400
+				obs.centfreq = 1400
+
+			# Parse the Position coordinates (accounting now for ha)
+			# note that HA is stored as RA in the Obs class, even if it is HA
+			hadec = ''
+			obs.hadec = ''
+
+			try: 
+				if 'ha' in d.keys() and d['ha'][i] != '-':
+
+					print('Detecting an HADEC observation!')
 					ra = float(d['ha'][i])
 					dec = float(d['dec'][i])
-				except:
-					ra = float(ra2dec(d['ha'][i]))
-					dec = float(dec2dec(d['dec'][i]))
-				#hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
-				#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
-				obs.ratype = 'field_ha'
+					obs.ratype = 'field_ha'
 
-			elif d['ra'][i] == '-':
-				print('No coordinates specified... maybe a pointing observation?')
-
-			elif 'deg' in d['ra'][i]:
-				ra = float(d['ra'][i].split('deg')[0])
-				dec = float(d['dec'][i].split('deg')[0])
-				obs.ratype = 'field_ra'
-
-			# With :
-			elif ':' in d['ra'][i]:
-				ra = ra2dec(d['ra'][i])
-				dec = dec2dec(d['dec'][i])
-				obs.ratype = 'field_ra'
-
-			# With HMS
-			elif 'h' in d['ra'][i]: 
-				ra = ra2dec(d['ra'][i].replace('h',':').replace('m',':').replace('s',''))
-				dec = dec2dec(d['dec'][i].replace('d',':').replace('m',':').replace('s',''))
-				obs.ratype = 'field_ra'
-
-			else:
-				print('Error parsing coordinates!')
-				sys.exit()	
-
-		# Assign these to the class
-		obs.ra = ra
-		obs.dec = dec
-		obs.extra = ''
-
-		# Imaging specific things
-		if args.mode == 'imaging':
-			src_obstype = d['type'][i]
-			obs.obstype = d['type'][i]
-
-			if 'freqmode' in d.keys():
-				if d['freqmode'][i] == 300:
-					extra = '--end_band=24'
-					obs.extra = '--end_band=24'
-				elif d['freqmode'][i] == 200:
-					extra = ''
-					obs.extra = ''
-			else:
-				extra = '--end_band=24'
-				obs.extra = '--end_band=24'
-
-			# Go into pointing mode
-			if src_obstype == 'P':
-
-				print('Pointing observation identified!')
-
-				# Send the relevant data to the pointing function
-				observing_mode = 'imaging_pointing'
-				obs.obsmode = 'imaging_pointing'
-
-				make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
-				#make_pointing(obs)
-
-				# We don't want to proceed with the code once the pointing is done!
-				break
-
-			elif src_obstype == 'O':
-				print('Operations tests mode identified!')
-
-				# Determine if offset beam is chosen or random
-				if obs.refbeam != 0:
-					offbeam = obs.refbeam
 				else:
-					offbeam = randint(1,40)
-
-				beamname = 'B0%.2d' % offbeam
-				beams = [0,offbeam]#,0]
-				ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
-				ra_new2,dec_new2 = calc_pos(ra,dec,beamname)
-				ras = [ra,ra,[ra_new1,ra_new2]]
-				decs = [dec,dec,[dec_new1,dec_new2]]
-				names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
-				patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['XXelement']]#, weightdict['YYelement']]
-				generate_tests(names,ras,decs,patterns,beams,obs)
-
-				break
-
-			elif src_obstype == 'D' or src_obstype == 'D*':
-				print('Drift mode identified!')
-
-				# Single drift through a row
-				if src_obstype == 'D':
+					ra = float(d['ra'][i])
+					dec = float(d['dec'][i])
+					obs.ratype = 'field_ra'
+			except:
+				if 'ha' in d.keys() and d['ha'][i] != '-':
+					print('Detecting an HADEC observation!')
 					try:
-						n_drift = d['n_drift'][i]
+						ra = float(d['ha'][i])
+						dec = float(d['dec'][i])
 					except:
-						n_drift = 1
-
-					ha,duration = calc_drift((ra,dec),sdate_dt,n_drift)
-					print(ra2dec(ha),duration)
-
-					# Deal with ref beam 					
-					beamname = 'B0%.2d' % obs.refbeam
-					ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
-					offset = '%+.2d' % ((dec - dec_new1)*60.)
-
-					# Change the variables
-					obs.ratype='field_ha'
-					obs.ra = ra2dec(ha)
-					obs.duration = duration
-					obs.edate = sdate_dt + timedelta(seconds=int(duration))
-					obs.src = obs.src+'drift'+offset
+						ra = float(ra2dec(d['ha'][i]))
+						dec = float(dec2dec(d['dec'][i]))
+					#hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 					#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
-					scannum = writesource_imaging(obs)
+					obs.ratype = 'field_ha'
 
-				elif src_obstype == 'D*':
-					refbeams = [0,7,14,20,26,32,39]
-					nbeams = [1,7,7,6,6,6,7]
-					currdate_dt = sdate_dt
-					truename = obs.src
+				elif d['ra'][i] == '-':
+					print('No coordinates specified... maybe a pointing observation?')
 
-					for ii in range(0,len(refbeams)):
-						
-						obs.refbeam = refbeams[ii]
-						n_drift = nbeams[ii]
+				elif 'deg' in d['ra'][i]:
+					ra = float(d['ra'][i].split('deg')[0])
+					dec = float(d['dec'][i].split('deg')[0])
+					obs.ratype = 'field_ra'
 
-						ha,duration = calc_drift((ra,dec),currdate_dt,n_drift)
+				# With :
+				elif ':' in d['ra'][i]:
+					ra = ra2dec(d['ra'][i])
+					dec = dec2dec(d['dec'][i])
+					obs.ratype = 'field_ra'
+
+				# With HMS
+				elif 'h' in d['ra'][i]: 
+					ra = ra2dec(d['ra'][i].replace('h',':').replace('m',':').replace('s',''))
+					dec = dec2dec(d['dec'][i].replace('d',':').replace('m',':').replace('s',''))
+					obs.ratype = 'field_ra'
+
+				else:
+					print('Error parsing coordinates!')
+					sys.exit()	
+
+			# Assign these to the class
+			obs.ra = ra
+			obs.dec = dec
+			obs.extra = ''
+
+			# Imaging specific things
+			if args.mode == 'imaging':
+				src_obstype = d['type'][i]
+				obs.obstype = d['type'][i]
+
+				if 'freqmode' in d.keys():
+					if d['freqmode'][i] == 300:
+						extra = '--end_band=24'
+						obs.extra = '--end_band=24'
+					elif d['freqmode'][i] == 200:
+						extra = ''
+						obs.extra = ''
+				else:
+					extra = '--end_band=24'
+					obs.extra = '--end_band=24'
+
+				# Go into pointing mode
+				if src_obstype == 'P':
+
+					print('Pointing observation identified!')
+
+					# Send the relevant data to the pointing function
+					observing_mode = 'imaging_pointing'
+					obs.obsmode = 'imaging_pointing'
+
+					make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
+					#make_pointing(obs)
+
+					# We don't want to proceed with the code once the pointing is done!
+					break
+
+				elif src_obstype == 'O':
+					print('Operations tests mode identified!')
+
+					# Determine if offset beam is chosen or random
+					if obs.refbeam != 0:
+						offbeam = obs.refbeam
+					else:
+						offbeam = randint(1,40)
+
+					beamname = 'B0%.2d' % offbeam
+					beams = [0,offbeam]#,0]
+					ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+					ra_new2,dec_new2 = calc_pos(ra,dec,beamname)
+					ras = [ra,ra,[ra_new1,ra_new2]]
+					decs = [dec,dec,[dec_new1,dec_new2]]
+					names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
+					patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['XXelement']]#, weightdict['YYelement']]
+					generate_tests(names,ras,decs,patterns,beams,obs)
+
+					break
+
+				elif src_obstype == 'D' or src_obstype == 'D*':
+					print('Drift mode identified!')
+
+					# Single drift through a row
+					if src_obstype == 'D':
+						try:
+							n_drift = d['n_drift'][i]
+						except:
+							n_drift = 1
+
+						ha,duration = calc_drift((ra,dec),sdate_dt,n_drift)
 						print(ra2dec(ha),duration)
 
-						# Deal with ref beam 
+						# Deal with ref beam 					
 						beamname = 'B0%.2d' % obs.refbeam
 						ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
 						offset = '%+.2d' % ((dec - dec_new1)*60.)
@@ -430,68 +406,97 @@ def main():
 						obs.ratype='field_ha'
 						obs.ra = ra2dec(ha)
 						obs.duration = duration
-						obs.sdate = currdate_dt
-						obs.edate = currdate_dt + timedelta(seconds=int(duration))
-						obs.src = truename+'drift'+offset
+						obs.edate = sdate_dt + timedelta(seconds=int(duration))
+						obs.src = obs.src+'drift'+offset
 						#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
 						scannum = writesource_imaging(obs)
 
-						# update the time
-						currdate_dt = obs.edate + timedelta(seconds=120)
+					elif src_obstype == 'D*':
+						refbeams = [0,7,14,20,26,32,39]
+						nbeams = [1,7,7,6,6,6,7]
+						currdate_dt = sdate_dt
+						truename = obs.src
 
-				continue
+						for ii in range(0,len(refbeams)):
+							
+							obs.refbeam = refbeams[ii]
+							n_drift = nbeams[ii]
+
+							ha,duration = calc_drift((ra,dec),currdate_dt,n_drift)
+							print(ra2dec(ha),duration)
+
+							# Deal with ref beam 
+							beamname = 'B0%.2d' % obs.refbeam
+							ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+							offset = '%+.2d' % ((dec - dec_new1)*60.)
+
+							# Change the variables
+							obs.ratype='field_ha'
+							obs.ra = ra2dec(ha)
+							obs.duration = duration
+							obs.sdate = currdate_dt
+							obs.edate = currdate_dt + timedelta(seconds=int(duration))
+							obs.src = truename+'drift'+offset
+							#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+
+							scannum = writesource_imaging(obs)
+
+							# update the time
+							currdate_dt = obs.edate + timedelta(seconds=120)
+
+					continue
 
 
-			# System offset stuff
-			if d['switch_type'][i] == 'system':
-				system_offset = True
-				obs.systemoffset = True
+				# System offset stuff
+				if d['switch_type'][i] == 'system':
+					system_offset = True
+					obs.systemoffset = True
 
-			elif d['switch_type'][i] == 'manual':
-				system_offset = False
-				obs.systemoffset = False
+				elif d['switch_type'][i] == 'manual':
+					system_offset = False
+					obs.systemoffset = False
 
-				if 'S' not in src_obstype:
-					beamname = 'B0%.2d' % refbeam
-					if d['weight'][i] == 'XXelement' or d['weight'][i] == 'YYelement':
-						ra_new,dec_new = calc_pos(ra,dec,beamname)
-					elif d['weight'][i] == 'compound':
-						ra_new,dec_new = calc_pos_compound(ra,dec,beamname)
-					else:
-						print (weightpatt)
-					#print(beamname,ra_new,dec_new,ra,dec)
-					ra,dec = ra_new,dec_new
-					refbeam = '0'
+					if 'S' not in src_obstype:
+						beamname = 'B0%.2d' % refbeam
+						if d['weight'][i] == 'XXelement' or d['weight'][i] == 'YYelement':
+							ra_new,dec_new = calc_pos(ra,dec,beamname)
+						elif d['weight'][i] == 'compound':
+							ra_new,dec_new = calc_pos_compound(ra,dec,beamname)
+						else:
+							print (weightpatt)
+						#print(beamname,ra_new,dec_new,ra,dec)
+						ra,dec = ra_new,dec_new
+						refbeam = '0'
 
-			elif d['switch_type'][i] == '-' or d['switch_type'][i] == -1.0:
-				print('No switching!')
-			else:
-				print('Switch type error!')
-				sys.exit()
+				elif d['switch_type'][i] == '-' or d['switch_type'][i] == -1.0:
+					print('No switching!')
+				else:
+					print('Switch type error!')
+					sys.exit()
 
-		# Account for beam switching (imaging only)
-		if src_obstype and 'S' in src_obstype:
-			make_beamswitch(obs)
+			# Account for beam switching (imaging only)
+			if src_obstype and 'S' in src_obstype:
+				make_beamswitch(obs)
 
-		# Standard observation otherwise
-		else:	
+			# Standard observation otherwise
+			else:	
 
-			# Write sources to file
-			if args.mode == 'imaging':
-				scannum = writesource_imaging(obs)
+				# Write sources to file
+				if args.mode == 'imaging':
+					scannum = writesource_imaging(obs)
 
-			elif args.mode == 'SC4':
+				elif args.mode == 'SC4':
 
-				# # Reset the tid if needed
-				# if str(old_edate) != str(date) and old_edate != None:
-				# 	start_tid = 1
-				# 	start_tnum = 0
+					# # Reset the tid if needed
+					# if str(old_edate) != str(date) and old_edate != None:
+					# 	start_tid = 1
+					# 	start_tnum = 0
 
-				scannum = writesource_sc4(obs)		
+					scannum = writesource_sc4(obs)		
 
-			elif args.mode == 'SC1':
-				scannum = writesource_sc1(obs)		
+				elif args.mode == 'SC1':
+					scannum = writesource_sc1(obs)		
 
 
 	# Close the outfile
