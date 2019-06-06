@@ -411,7 +411,7 @@ def make_verification(obs,mode):
 	obs.hadec = ''
 
 	# Define start time as 5 min from now
-	obs.sdate = datetime.utcnow() + timedelta(minutes=5)
+	obs.sdate = datetime.utcnow().replace(microsecond=0) + timedelta(minutes=5)
 	fformat = datetime.strftime(obs.sdate,'%Y%m%d_%H%M%S')
 
 	# Start the file
