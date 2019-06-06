@@ -48,7 +48,8 @@ def main():
 		action='store_true',
 		help='Specify whether to only make a parset and not submit it (default: %(default)s)')
 	parser.add_argument('-v', '--verification',
-		default=True,
+		default=False,
+		action='store_true',
 		help='Specify whether to send a verification/test observation for specified mode (default: %(default)s)')
 
 	# Parse the arguments above
