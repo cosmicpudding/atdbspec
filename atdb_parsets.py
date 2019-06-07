@@ -15,6 +15,7 @@ from modules.functions import *
 from modules.drift import calc_drift
 from datetime import datetime,timedelta
 import time
+import getpass
 
 def main():
 	"""
@@ -28,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/drift_20190603.csv',
+			default='input/test_20190607_offset.csv',
 			help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 			default='imaging',
@@ -125,7 +126,7 @@ def main():
 		# Start the file
 		outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
 		out = open(outname,'w')
-		out.write('#!/bin/bash\n# Script to create commands for Apertif ATDB\n# Automatic generation script by V.A. Moss 04/10/2018\n# Last updated by V.A. Moss 11/02/2019\n# Schedule generated: %s UTC\n\n' % datetime.utcnow())
+		out.write(make_header())
 		out.flush()
 
 		# Add to the class definition
@@ -348,6 +349,13 @@ def main():
 				else:
 					extra = '--end_band=24'
 					obs.extra = '--end_band=24'
+
+				# Check for delay offset 
+				if 'delayoffset' in d.keys():
+					offset = d['delayoffset'][i]
+					obs.delayoffset = '--delay_center_offset=%s' % offset
+				else:
+					obs.delayoffset = ''
 
 				# Go into pointing mode
 				if src_obstype == 'P':
