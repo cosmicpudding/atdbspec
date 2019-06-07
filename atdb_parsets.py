@@ -105,7 +105,7 @@ def main():
 	# parsetonly string
 	if args.parset_only:
 		#parsetonly = '--parset_only'
-		obs.parsetonly = '--parset_only'
+		obs.parsetonly = '--parset_only '
 	else:
 		#parsetonly = ''
 		obs.parsetonly = ''
@@ -217,12 +217,20 @@ def main():
 				obs.pulsar = d['pulsar'][i]
 
 			elif args.mode == 'SC1':
+
+				obs.skipingest = ''
+
 				if d['mode'][i] == 'timing':
 					#observing_mode = 'arts_sc1_timing'
 					obs.obsmode = 'arts_sc1_timing'
 				elif d['mode'][i] == 'baseband':
 					#observing_mode = 'arts_sc1_baseband'
 					obs.obsmode = 'arts_sc1_baseband'
+
+					# for arts_sc1_baseband no dataproducts are created for ALTA
+					# add the --skip_auto_ingest flag to let baseband observations end in a 'completed' state in ATDB.
+					obs.skipingest = '--skip_auto_ingest '
+
 			#	sband = d['sband'][i]
 		#		eband = d['eband'][i]
 	#			parfile = d['par'][i]
@@ -347,17 +355,17 @@ def main():
 				if 'freqmode' in d.keys():
 					if d['freqmode'][i] == 300:
 						#extra = '--end_band=24'
-						obs.extra = '--end_band=24'
+						obs.extra = '--end_band=24 '
 					elif d['freqmode'][i] == 200:
 						#extra = ''
 						obs.extra = ''
 				else:
 					#extra = '--end_band=24'
-					obs.extra = '--end_band=24'
+					obs.extra = '--end_band=24 '
 
 				# Check for delay offset 
 				if 'delayoffset' in d.keys():
-					obs.delayoffset = '--delay_center_offset=%s' % d['delayoffset'][i]
+					obs.delayoffset = '--delay_center_offset=%s ' % d['delayoffset'][i]
 				else:
 					obs.delayoffset = ''
 
