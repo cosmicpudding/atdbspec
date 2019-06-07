@@ -29,14 +29,14 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-			default='input/test_20190607_offset.csv',
-			help='Specify the input file location (default: %(default)s)')	
+		default='test/fixtures/test_20190607_offset.csv',
+		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-			default='imaging',
-			help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
+		default='imaging',
+		help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-			default='23456789ABCD',
-			help='Specify which telescopes to include (default: %(default)s)')
+		default='23456789ABCD',
+		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-c', '--cluster_mode',
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
@@ -76,8 +76,10 @@ def main():
 		print('WARNING!!!\nExpected telescopes: %s\nSpecified telescopes: %s\n' % (expected_scopes,args.telescopes))
 
 		try: 
+			# Python 3
 			proceed = input('Do you want to proceed? (y/n) ')
 		except:
+			# Python 2
 			proceed = raw_input('Do you want to proceed? (y/n) ')
 
 		if proceed != 'y':
@@ -102,15 +104,17 @@ def main():
 
 	# parsetonly string
 	if args.parset_only:
-		parsetonly = '--parset_only'
+		#parsetonly = '--parset_only'
 		obs.parsetonly = '--parset_only'
 	else:
-		parsetonly = ''
+		#parsetonly = ''
 		obs.parsetonly = ''
 
 	# Verification observation
 	if args.verification:
 		out,outname = make_verification(obs,args.mode)
+		obs.out = out
+		obs.outname = outname
 
 	################################################
 	
@@ -131,12 +135,13 @@ def main():
 
 		# Add to the class definition
 		obs.out = out
+		obs.outname = outname
 
 		# Loop through sources
 		for i in range(0,len(d)):
 
 			# Get the common parameters for all
-			src = d['source'][i]
+			#src = d['source'][i]
 			obs.src = d['source'][i]
 
 			# Get the pieces of date time
@@ -200,10 +205,10 @@ def main():
 
 			# Observing mode
 			if args.mode == 'SC4':
-				observing_mode = 'arts_sc4_survey'
-				start_beam = d['sbeam'][i]
-				end_beam = d['ebeam'][i]
-				pulsar = d['pulsar'][i]
+				#observing_mode = 'arts_sc4_survey'
+				#start_beam = d['sbeam'][i]
+				#end_beam = d['ebeam'][i]
+				#pulsar = d['pulsar'][i]
 
 				# Class replacements
 				obs.obsmode = 'arts_sc4_survey'
@@ -213,14 +218,14 @@ def main():
 
 			elif args.mode == 'SC1':
 				if d['mode'][i] == 'timing':
-					observing_mode = 'arts_sc1_timing'
+					#observing_mode = 'arts_sc1_timing'
 					obs.obsmode = 'arts_sc1_timing'
 				elif d['mode'][i] == 'baseband':
-					observing_mode = 'arts_sc1_baseband'
+					#observing_mode = 'arts_sc1_baseband'
 					obs.obsmode = 'arts_sc1_baseband'
-				sband = d['sband'][i]
-				eband = d['eband'][i]
-				parfile = d['par'][i]
+			#	sband = d['sband'][i]
+		#		eband = d['eband'][i]
+	#			parfile = d['par'][i]
 
 				# Class replacements
 				obs.sband = d['sband'][i]
@@ -228,54 +233,54 @@ def main():
 				obs.parfile = d['par'][i]
 
 			else:
-				observing_mode = 'imaging'
+				#observing_mode = 'imaging'
 
 				# Class replacements
 				obs.obsmode = 'imaging'
 
 			# Get ref beam
 			try:
-				refbeam = d['beam'][i]
+				#refbeam = d['beam'][i]
 
 				# Class replacements
-				obs.refbeam = refbeam
+				obs.refbeam = d['beam'][i]
 			except:
-				refbeam = '0'
+				#refbeam = '0'
 
 				# Class replacements
-				obs.refbeam = refbeam
+				obs.refbeam = '0'
 
 			# Determine the integration factor in seconds
 			try:
-				ints = d['int'][i]
+				#ints = d['int'][i]
 				obs.intfac = d['int'][i]
 			except: 
 				if args.mode == 'SC4':
-					ints = 30
+					#ints = 30
 					obs.intfac = 30
 				elif args.mode == 'SC1':
-					ints = 20
+					#ints = 20
 					obs.intfac = 20
 
 			# Define weight pattern
 			try:
-				weightpatt = weightdict[d['weight'][i]]
+				#weightpatt = weightdict[d['weight'][i]]
 				obs.weightpatt = weightdict[d['weight'][i]]
 			except:
-				weightpatt = 'square_39p1'
+				#weightpatt = 'square_39p1'
 				obs.weightpatt = 'square_39p1'
 
 			# Try to find central frequency
 			if 'centfreq' in d.keys():
-				centfreq = int(d['centfreq'][i])
+				#centfreq = int(d['centfreq'][i])
 				obs.centfreq = int(d['centfreq'][i])
 			else:
-				centfreq = 1400
-				obs.centfreq = 1400
+				#centfreq = 1400
+				obs.centfreq = 1370 # new default
 
 			# Parse the Position coordinates (accounting now for ha)
 			# note that HA is stored as RA in the Obs class, even if it is HA
-			hadec = ''
+			#hadec = ''
 			obs.hadec = ''
 
 			try: 
@@ -336,43 +341,42 @@ def main():
 
 			# Imaging specific things
 			if args.mode == 'imaging':
-				src_obstype = d['type'][i]
+				#src_obstype = d['type'][i]
 				obs.obstype = d['type'][i]
 
 				if 'freqmode' in d.keys():
 					if d['freqmode'][i] == 300:
-						extra = '--end_band=24'
+						#extra = '--end_band=24'
 						obs.extra = '--end_band=24'
 					elif d['freqmode'][i] == 200:
-						extra = ''
+						#extra = ''
 						obs.extra = ''
 				else:
-					extra = '--end_band=24'
+					#extra = '--end_band=24'
 					obs.extra = '--end_band=24'
 
 				# Check for delay offset 
 				if 'delayoffset' in d.keys():
-					offset = d['delayoffset'][i]
-					obs.delayoffset = '--delay_center_offset=%s' % offset
+					obs.delayoffset = '--delay_center_offset=%s' % d['delayoffset'][i]
 				else:
 					obs.delayoffset = ''
 
 				# Go into pointing mode
-				if src_obstype == 'P':
+				if obs.obstype == 'P':
 
 					print('Pointing observation identified!')
 
 					# Send the relevant data to the pointing function
-					observing_mode = 'imaging_pointing'
+					#observing_mode = 'imaging_pointing'
 					obs.obsmode = 'imaging_pointing'
 
-					make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
-					#make_pointing(obs)
+					#make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
+					make_pointing(obs)
 
 					# We don't want to proceed with the code once the pointing is done!
 					break
 
-				elif src_obstype == 'O':
+				elif obs.obstype == 'O':
 					print('Operations tests mode identified!')
 
 					# Determine if offset beam is chosen or random
@@ -383,48 +387,48 @@ def main():
 
 					beamname = 'B0%.2d' % offbeam
 					beams = [0,offbeam]#,0]
-					ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
+					ra_new1,dec_new1 = calc_pos_compound(obs.ra,obs.dec,beamname)
 					ra_new2,dec_new2 = calc_pos(ra,dec,beamname)
-					ras = [ra,ra,[ra_new1,ra_new2]]
-					decs = [dec,dec,[dec_new1,dec_new2]]
-					names = [src,src + '_%i' % offbeam,src + '_%i' % offbeam]
+					ras = [obs.ra,obs.ra,[ra_new1,ra_new2]]
+					decs = [obs.dec,obs.dec,[dec_new1,dec_new2]]
+					names = [obs.src,obs.src + '_%i' % offbeam,obs.src + '_%i' % offbeam]
 					patterns = [weightdict['compound'],weightdict['XXelement']]#,weightdict['XXelement']]#, weightdict['YYelement']]
 					generate_tests(names,ras,decs,patterns,beams,obs)
 
 					break
 
-				elif src_obstype == 'D' or src_obstype == 'D*':
+				elif obs.obstype == 'D' or obs.obstype == 'D*':
 					print('Drift mode identified!')
 
 					# Single drift through a row
-					if src_obstype == 'D':
+					if obs.obstype == 'D':
 						try:
 							n_drift = d['n_drift'][i]
 						except:
 							n_drift = 1
 
-						ha,duration = calc_drift((ra,dec),sdate_dt,n_drift)
+						ha,duration = calc_drift((obs.ra,obs.dec),obs.sdate,n_drift)
 						print(ra2dec(ha),duration)
 
 						# Deal with ref beam 					
 						beamname = 'B0%.2d' % obs.refbeam
-						ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
-						offset = '%+.2d' % ((dec - dec_new1)*60.)
+						ra_new1,dec_new1 = calc_pos_compound(obs.ra,obs.dec,beamname)
+						offset = '%+.2d' % ((obs.dec - dec_new1)*60.)
 
 						# Change the variables
 						obs.ratype='field_ha'
-						obs.ra = ra2dec(ha)
+						obs.ra = ra2dec(ha) # Note: it intentionally goes to ra!
 						obs.duration = duration
 						obs.edate = sdate_dt + timedelta(seconds=int(duration))
 						obs.src = obs.src+'drift'+offset
-						#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
+		
+						# Write to the outfile
+						writesource_imaging(obs)
 
-						scannum = writesource_imaging(obs)
-
-					elif src_obstype == 'D*':
+					elif obs.obstype == 'D*':
 						refbeams = [0,7,14,20,26,32,39]
 						nbeams = [1,7,7,6,6,6,7]
-						currdate_dt = sdate_dt
+						currdate_dt = obs.sdate
 						truename = obs.src
 
 						for ii in range(0,len(refbeams)):
@@ -432,24 +436,24 @@ def main():
 							obs.refbeam = refbeams[ii]
 							n_drift = nbeams[ii]
 
-							ha,duration = calc_drift((ra,dec),currdate_dt,n_drift)
+							ha,duration = calc_drift((obs.ra,obs.dec),currdate_dt,n_drift)
 							print(ra2dec(ha),duration)
 
 							# Deal with ref beam 
 							beamname = 'B0%.2d' % obs.refbeam
-							ra_new1,dec_new1 = calc_pos_compound(ra,dec,beamname)
-							offset = '%+.2d' % ((dec - dec_new1)*60.)
+							ra_new1,dec_new1 = calc_pos_compound(obs.ra,obs.dec,beamname)
+							offset = '%+.2d' % ((obs.dec - dec_new1)*60.)
 
 							# Change the variables
 							obs.ratype='field_ha'
-							obs.ra = ra2dec(ha)
+							obs.ra = ra2dec(ha) # Note: it intentionally goes to ra!
 							obs.duration = duration
 							obs.sdate = currdate_dt
 							obs.edate = currdate_dt + timedelta(seconds=int(duration))
 							obs.src = truename+'drift'+offset
-							#obs.hadec = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_driftscan_atdb.template '
 
-							scannum = writesource_imaging(obs)
+							# Write to the outfile
+							writesource_imaging(obs)
 
 							# update the time
 							currdate_dt = obs.edate + timedelta(seconds=120)
@@ -459,24 +463,24 @@ def main():
 
 				# System offset stuff
 				if d['switch_type'][i] == 'system':
-					system_offset = True
+					#system_offset = True
 					obs.systemoffset = True
 
 				elif d['switch_type'][i] == 'manual':
-					system_offset = False
+					#system_offset = False
 					obs.systemoffset = False
 
 					if 'S' not in src_obstype:
 						beamname = 'B0%.2d' % refbeam
 						if d['weight'][i] == 'XXelement' or d['weight'][i] == 'YYelement':
-							ra_new,dec_new = calc_pos(ra,dec,beamname)
+							ra_new,dec_new = calc_pos(obs.ra,obs.dec,beamname)
 						elif d['weight'][i] == 'compound':
-							ra_new,dec_new = calc_pos_compound(ra,dec,beamname)
+							ra_new,dec_new = calc_pos_compound(obs.ra,obs.dec,beamname)
 						else:
 							print (weightpatt)
 						#print(beamname,ra_new,dec_new,ra,dec)
-						ra,dec = ra_new,dec_new
-						refbeam = '0'
+						obs.ra,obs.dec = ra_new,dec_new
+						obs.refbeam = '0'
 
 				elif d['switch_type'][i] == '-' or d['switch_type'][i] == -1.0:
 					print('No switching!')
@@ -485,7 +489,7 @@ def main():
 					sys.exit()
 
 			# Account for beam switching (imaging only)
-			if src_obstype and 'S' in src_obstype:
+			if obs.obstype and 'S' in obs.obstype:
 				make_beamswitch(obs)
 
 			# Standard observation otherwise
@@ -493,7 +497,7 @@ def main():
 
 				# Write sources to file
 				if args.mode == 'imaging':
-					scannum = writesource_imaging(obs)
+					writesource_imaging(obs)
 
 				elif args.mode == 'SC4':
 
@@ -502,23 +506,23 @@ def main():
 					# 	start_tid = 1
 					# 	start_tnum = 0
 
-					scannum = writesource_sc4(obs)		
+					writesource_sc4(obs)		
 
 				elif args.mode == 'SC1':
-					scannum = writesource_sc1(obs)		
+					writesource_sc1(obs)		
 
 
 	# Close the outfile
 	out.close()
 
 	# Make the resultting file executables
-	os.system('chmod oug+x %s' % outname)
+	os.system('chmod oug+x %s' % obs.outname)
 
 	if args.upload:
 
 		# Upload the file automatically to wcudata1
 		# Note: this assumes you have ssh key forwarding activated for apertif user account
-		cmd = "rsync -avzP %s apertif@wcudata1.apertif:~/atdb_client/scripts/" % outname
+		cmd = "rsync -avzP %s apertif@wcudata1.apertif:~/atdb_client/scripts/" % obs.outname
 		os.system(cmd)
 
 		#if args.mode == 'SC4':

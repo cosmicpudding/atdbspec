@@ -1,0 +1,2 @@
+source,ra,dec,date1,time1,duration,int,type,weight,beam,switch_type,freqmode,centfreq,delayoffset
+3C286,13:31:08.2879,30:30:32.958,2019-05-31,15:45:00,60,10,O,-,11,system,300,1370,"[0.5,0.0]"

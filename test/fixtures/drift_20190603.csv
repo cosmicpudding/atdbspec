@@ -1,0 +1,2 @@
+source,ra,dec,date1,time1,duration,int,type,weight,beam,switch_type,freqmode,centfreq,n_drift
+3C48,01:37:41.2994,33:09:35.134,2019-06-03,03:00:00,-,10,D*,compound,0,system,300,1370,-

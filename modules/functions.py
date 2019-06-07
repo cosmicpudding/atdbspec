@@ -59,7 +59,9 @@ class Observation:
 		self.eband = None
 		self.parfile = None
 
+		# out file parameters
 		self.out = None
+		self.outname = None
 
 
 ###################################################################
@@ -149,16 +151,24 @@ start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --t
 	out.write(cmd)
 	out.flush()
 
-
-	return scan
-
 ###################################################################
 # Convert pointing observation into a series of observations
-def make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,telescopes,observing_mode,parsetonly,hadec):
+def make_pointing(obs):
 
 	# Location (WSRT)
 	lat = 52.91474
 	lon = 6.60334
+
+	# Define the parameters needed from obs
+	sdate_dt = obs.sdate
+	edate_dt = obs.edate
+	ints = obs.intfac
+	weightpatt = obs.weightpatt	
+	out = obs.out
+	telescopes = obs.telescopes
+	observing_mode = obs.obsmode
+	parsetonly = obs.parsetonly
+	hadec = obs.hadec
 
 	print(sdate_dt,edate_dt,ints,weightpatt)
 	

@@ -1,0 +1,2 @@
+source,ra,dec,date1,time1,date2,time2,int,type,weight,beam,switch_type,freqmode,centfreq
+3C286,13:31:08.2879,30:30:32.95,2019-05-29,15:40:00,2019-05-29,17:38:00,10,S*,compound,0,system,300,1370
