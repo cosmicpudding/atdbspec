@@ -424,6 +424,7 @@ def make_verification(obs,mode):
 	obs.extra = ''
 	obs.hadec = ''
 	obs.delayoffset = ''
+	obs.skipingest = ''
 
 	# Define start time as 5 min from now
 	obs.sdate = datetime.utcnow().replace(microsecond=0) + timedelta(minutes=5)
