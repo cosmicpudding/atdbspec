@@ -1,10 +1,9 @@
-# APERTIF PARSET GENERATOR ATDB VERSION 1.2 (atdb_parsets.py) - now with ARTS
+# APERTIF PARSET GENERATOR ATDB VERSION 1.5 (atdb_parsets.py) - now with ARTS
 # Input: source text file
 # V.A. Moss 19/12/2018 (vmoss.astro@gmail.com)
-
 __author__ = "V.A. Moss"
-__date__ = "$19-dec-2018 17:00:00$"
-__version__ = "1.2"
+__date__ = "$07-jun-2019 17:00:00$"
+__version__ = "1.5"
 
 import sys
 from astropy.io import ascii
