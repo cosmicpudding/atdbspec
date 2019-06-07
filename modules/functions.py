@@ -3,7 +3,7 @@
 # V.A. Moss 19/12/2018 (vmoss.astro@gmail.com)
 __author__ = "V.A. Moss"
 __date__ = "$07-jun-2019 17:00:00$"
-__version__ = "1.5"
+__version__ = "1.5.1"
 
 import sys
 from astropy.io import ascii
@@ -117,7 +117,14 @@ def writesource_sc4(obs):
 def writesource_sc1(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {obs.parsetonly} {obs.extra} {obs.hadec}\n\n""".format(**locals()))
+
+	# for arts_sc1_baseband no dataproducts are created for ALTA
+	# add the --skip_auto_ingest flag to let baseband observations end in a 'completed' state in ATDB.
+	add_skip_key = ""
+	if 'baseband' in obs.obsmode:
+		add_skip_key = "--skip_auto_ingest"
+
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {add_skip_key} {obs.parsetonly} {obs.extra} {obs.hadec} \n\n""".format(**locals()))
 	obs.out.flush()
 
 ###################################################################
