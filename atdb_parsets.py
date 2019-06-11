@@ -3,7 +3,7 @@
 # V.A. Moss 19/12/2018 (vmoss.astro@gmail.com)
 __author__ = "V.A. Moss"
 __date__ = "$07-jun-2019 17:00:00$"
-__version__ = "1.5"
+__version__ = "1.5.1"
 
 import os
 import sys
