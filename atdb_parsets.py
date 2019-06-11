@@ -55,6 +55,10 @@ def main():
 	parser.add_argument('-a', '--artsmode',
 		default='TAB',
 		help='Specify which mode to record for ARTS SC4, either incoherent IAB or tied-array TAB (default: %(default)s)')
+	parser.add_argument('-n', '--numofobs',
+		default=4,
+		type = int,
+		help='Specify how many verification observations to do, in imaging mode (default: %(default)s)')
 
 
 	# Parse the arguments above
@@ -119,6 +123,7 @@ def main():
 
 	# Verification observation
 	if args.verification:
+		obs.numofobs = args.numofobs
 		out,outname = make_verification(obs,args.mode)
 		obs.out = out
 		obs.outname = outname

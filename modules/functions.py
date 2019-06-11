@@ -65,6 +65,7 @@ class Observation:
 		self.hadec = None
 		self.delayoffset = None
 		self.skipingest = None
+		self.numofobs = None
 
 
 ###################################################################
@@ -263,6 +264,7 @@ def generate_tests(names,ras,decs,patterns,beams,obs):
 
 	start = obs.sdate
 	end = obs.sdate + timedelta(seconds=int(obs.duration))
+	numobs = 0
 
 	for i in range(0,len(beams)):
 
@@ -296,6 +298,14 @@ def generate_tests(names,ras,decs,patterns,beams,obs):
 
 			start = end + timedelta(seconds=120)
 			end = start + timedelta(seconds=int(obs.duration))
+
+			numobs+=1
+
+			if numobs >= obs.numofobs:
+				print("Stopping here with generation of %i imaging test/s...!" % obs.numofobs)
+				return 
+
+			
 
 ###################################################################
 # Beam switching functionality
