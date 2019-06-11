@@ -48,6 +48,7 @@ class Observation:
 		self.sbeam = None
 		self.ebeam = None
 		self.pulsar = None
+		self.artsmode = None
 
 		# SC1 specific parameters
 		self.sband = None
@@ -110,7 +111,7 @@ def writesource_imaging(obs):
 def writesource_sc4(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode=TAB --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode={obs.artsmode} --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}\n\n""".format(**locals()))
 	obs.out.flush()
 
 

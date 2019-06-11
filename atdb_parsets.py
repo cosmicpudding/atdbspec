@@ -29,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='test/fixtures/test_20190607_offset.csv',
+		default='input/drift_20190607.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -41,7 +41,7 @@ def main():
 		default='ATDB',
 		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=False,
+		default=True,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
@@ -52,6 +52,10 @@ def main():
 		default=False,
 		action='store_true',
 		help='Specify whether to send a verification/test observation for specified mode (default: %(default)s)')
+	parser.add_argument('-a', '--artsmode',
+		default='TAB',
+		help='Specify which mode to record for ARTS SC4, either incoherent IAB or tied-array TAB (default: %(default)s)')
+
 
 	# Parse the arguments above
 	args = parser.parse_args()
@@ -109,6 +113,9 @@ def main():
 	else:
 		#parsetonly = ''
 		obs.parsetonly = ''
+
+	# Consider also ARTS mode
+	obs.artsmode = args.artsmode
 
 	# Verification observation
 	if args.verification:
@@ -438,19 +445,19 @@ def main():
 						nbeams = [1,7,7,6,6,6,7]
 						currdate_dt = obs.sdate
 						truename = obs.src
+						truera = obs.ra
+						truedec = obs.dec
 
 						for ii in range(0,len(refbeams)):
 							
 							obs.refbeam = refbeams[ii]
 							n_drift = nbeams[ii]
+							obs.ra = truera
+							obs.dec = truedec
 
-							ha,duration = calc_drift((obs.ra,obs.dec),currdate_dt,n_drift)
+							#print(obs.ra,obs.dec)
+							ha,duration = calc_drift((truera,truedec),currdate_dt,n_drift)
 							print(ra2dec(ha),duration)
-
-							# Deal with ref beam 
-							beamname = 'B0%.2d' % obs.refbeam
-							ra_new1,dec_new1 = calc_pos_compound(obs.ra,obs.dec,beamname)
-							offset = '%+.2d' % ((obs.dec - dec_new1)*60.)
 
 							# Change the variables
 							obs.ratype='field_ha'
@@ -458,6 +465,11 @@ def main():
 							obs.duration = duration
 							obs.sdate = currdate_dt
 							obs.edate = currdate_dt + timedelta(seconds=int(duration))
+
+							# Deal with ref beam 
+							beamname = 'B0%.2d' % obs.refbeam
+							ra_new1,dec_new1 = calc_pos_compound(obs.ra,obs.dec,beamname)
+							offset = '%+.2d' % ((obs.dec - dec_new1)*60.)
 							obs.src = truename+'drift'+offset
 
 							# Write to the outfile
