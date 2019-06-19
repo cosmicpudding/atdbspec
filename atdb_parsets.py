@@ -37,11 +37,8 @@ def main():
 	parser.add_argument('-t', '--telescopes',
 		default='23456789ABCD',
 		help='Specify which telescopes to include (default: %(default)s)')
-	parser.add_argument('-c', '--cluster_mode',
-		default='ATDB',
-		help='Specify which ARTS cluster mode, either standard/ATDB (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=True,
+		default=False,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
@@ -59,6 +56,14 @@ def main():
 		default=4,
 		type = int,
 		help='Specify how many verification observations to do, in imaging mode (default: %(default)s)')
+	parser.add_argument('-s', '--selobs',
+		default=None,
+		type = int,
+		help='Specify which verification observation to do, in imaging mode (default: %(default)s)')
+	parser.add_argument('-c', '--centfreq',
+		default=1370,
+		type = int,
+		help='Specify which central frequency, in imaging mode (default: %(default)s)')
 
 
 	# Parse the arguments above
@@ -124,6 +129,8 @@ def main():
 	# Verification observation
 	if args.verification:
 		obs.numofobs = args.numofobs
+		obs.selobs = args.selobs
+		obs.centfreq = args.centfreq
 		out,outname = make_verification(obs,args.mode)
 		obs.out = out
 		obs.outname = outname
