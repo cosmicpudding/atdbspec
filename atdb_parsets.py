@@ -147,7 +147,7 @@ def main():
 		print(list(d.keys())) 
 
 		# Start the file
-		outname = '%s_%s.sh' % (fname.split('.')[0],args.mode)
+		outname = '%s_%s.sh' % (fname.split('.csv')[0],args.mode)
 		out = open(outname,'w')
 		out.write(make_header())
 		out.flush()

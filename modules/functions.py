@@ -66,6 +66,7 @@ class Observation:
 		self.delayoffset = None
 		self.skipingest = None
 		self.numofobs = None
+		self.selobs = None
 
 
 ###################################################################
@@ -294,12 +295,17 @@ def generate_tests(names,ras,decs,patterns,beams,obs):
 			obs.refbeam = beam 
 			obs.weightpatt = pattern
 
-			writesource_imaging(obs)
+			numobs+=1
+			if obs.selobs and numobs == obs.selobs:
+				writesource_imaging(obs)
+			elif obs.selobs:
+				print('Not writing this observation because it was not selected!')
+				continue
+			else:
+				writesource_imaging(obs)
 
 			start = end + timedelta(seconds=120)
 			end = start + timedelta(seconds=int(obs.duration))
-
-			numobs+=1
 
 			if numobs >= obs.numofobs:
 				print("Stopping here with generation of %i imaging test/s...!" % obs.numofobs)
@@ -428,7 +434,6 @@ def make_beamswitch(obs):
 def make_verification(obs,mode):
 
 	# Global params
-	obs.centfreq = 1370
 	obs.weightpatt = 'square_39p1'
 	obs.refbeam = 0
 	obs.ratype = 'field_ra'
