@@ -67,6 +67,7 @@ class Observation:
 		self.skipingest = None
 		self.numofobs = None
 		self.selobs = None
+		self.template = None
 
 
 ###################################################################
@@ -104,7 +105,7 @@ def dec2dec(dec):
 def writesource_imaging(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --endtime='{obs.edate}' --pattern={obs.weightpatt} --observing_mode={obs.obsmode} --integration_factor={obs.intfac} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data/apertif/ --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.delayoffset}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --endtime='{obs.edate}' --pattern={obs.weightpatt} --observing_mode={obs.obsmode} --integration_factor={obs.intfac} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data/apertif/ --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.delayoffset}{obs.template}\n\n""".format(**locals()))
 	obs.out.flush()
 
 ###################################################################
@@ -113,7 +114,7 @@ def writesource_imaging(obs):
 def writesource_sc4(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode={obs.artsmode} --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode={obs.artsmode} --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}{obs.template}\n\n""".format(**locals()))
 	obs.out.flush()
 
 
@@ -123,7 +124,7 @@ def writesource_sc4(obs):
 def writesource_sc1(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.skipingest} \n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.skipingest}{obs.template}\n\n""".format(**locals()))
 	obs.out.flush()
 
 ###################################################################
@@ -441,6 +442,7 @@ def make_verification(obs,mode):
 	obs.hadec = ''
 	obs.delayoffset = ''
 	obs.skipingest = ''
+	obs.template = ''
 
 	# Define start time as 5 min from now
 	obs.sdate = datetime.utcnow().replace(microsecond=0) + timedelta(minutes=5)

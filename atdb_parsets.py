@@ -159,6 +159,18 @@ def main():
 		# Loop through sources
 		for i in range(0,len(d)):
 
+			# Check for delay offset 
+			if 'delayoffset' in d.keys():
+				obs.delayoffset = '--delay_center_offset=%s ' % d['delayoffset'][i]
+			else:
+				obs.delayoffset = ''
+
+			# Check for template specification
+			if 'template' in d.keys():
+				obs.template = '--parset_location=%s ' % d['template'][i]
+			else:
+				obs.template = ''
+
 			# Get the common parameters for all
 			#src = d['source'][i]
 			obs.src = d['source'][i]
@@ -288,6 +300,7 @@ def main():
 				elif args.mode == 'SC1':
 					#ints = 20
 					obs.intfac = 20
+					obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
 
 			# Define weight pattern
 			try:
@@ -381,12 +394,6 @@ def main():
 				else:
 					#extra = '--end_band=24'
 					obs.extra = '--end_band=24 '
-
-				# Check for delay offset 
-				if 'delayoffset' in d.keys():
-					obs.delayoffset = '--delay_center_offset=%s ' % d['delayoffset'][i]
-				else:
-					obs.delayoffset = ''
 
 				# Go into pointing mode
 				if obs.obstype == 'P':
