@@ -38,7 +38,7 @@ def main():
 		default='23456789ABCD',
 		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=True,
+		default=False,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
