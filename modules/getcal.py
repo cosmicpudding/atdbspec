@@ -81,19 +81,19 @@ def get_cal_arts():
 	# Return calibrator based on LST
 	if lst < 5:
 		bestcal = 'B0329+54'
-		ra,dec = 83.633221,22.014461
-	elif lst < 8:
+		ra,dec = 53.247367,54.578769
+	elif lst < 11:
 		bestcal = 'B0531+21' 
-		ra,dec = 148.288790,7.926597
-	elif lst < 14.5:
+		ra,dec = 83.633221,22.014461
+	elif lst < 14:
 		bestcal = 'B0950+08'
-		ra,dec = 293.949275,16.277774
+		ra,dec = 148.288790,7.926597
 	elif lst < 22:
 		bestcal = 'B1933+16'
-		ra,dec = 53.247367,54.578769
+		ra,dec = 293.949275,16.277774
 	else:
 		bestcal = 'B0329+54'
-		ra,dec = 83.633221,22.014461
+		ra,dec = 53.247367,54.578769
 
 	return (bestcal,ra,dec)
 

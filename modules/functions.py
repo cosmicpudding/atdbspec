@@ -331,7 +331,7 @@ def make_beamswitch(obs):
 	rndbm_set = list(np.arange(0,40)) # list(np.arange(0,40))
 
 	# Random subset
-	#rndbm_set = np.random.choice(rndbm_set,17,replace=False)
+	rndbm_set = np.random.choice(rndbm_set,10,replace=False)
 
 	# Randomise beams if there is a ? in the specification
 	if '?' in obs.obstype:

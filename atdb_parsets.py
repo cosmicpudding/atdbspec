@@ -29,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/drift_20190607.csv',
+		default='input/cal_20190623_v3.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -38,7 +38,7 @@ def main():
 		default='23456789ABCD',
 		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
-		default=False,
+		default=True,
 		action='store_true',
 		help='Specify whether to automatically upload to wcudata1 (default: %(default)s)')
 	parser.add_argument('-p', '--parset_only',
