@@ -33,7 +33,8 @@ def main():
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
-		help='Specify whether mode is imaging/SC1/SC4 (default: %(default)s)')
+		type = str.lower,
+		help='Specify whether mode is imaging/sc1/sc4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
 		default='23456789ABCD',
 		help='Specify which telescopes to include (default: %(default)s)')
@@ -80,8 +81,8 @@ def main():
 
 	# Expected telescopes
 	scopesdict = {'imaging':'23456789ABCD',
-				  'SC1': '23456789',
-				  'SC4': '23456789'}
+				  'sc1': '23456789',
+				  'sc4': '23456789'}
 
 	# Check if default doesn't match and warn user
 	expected_scopes = scopesdict[args.mode]
@@ -235,7 +236,7 @@ def main():
 			src_obstype = obs.obstype
 
 			# Observing mode
-			if args.mode == 'SC4':
+			if args.mode == 'sc4':
 				#observing_mode = 'arts_sc4_survey'
 				#start_beam = d['sbeam'][i]
 				#end_beam = d['ebeam'][i]
@@ -247,7 +248,7 @@ def main():
 				obs.ebeam = d['ebeam'][i]
 				obs.pulsar = d['pulsar'][i]
 
-			elif args.mode == 'SC1':
+			elif args.mode == 'sc1':
 
 				obs.skipingest = ''
 
@@ -294,10 +295,10 @@ def main():
 				#ints = d['int'][i]
 				obs.intfac = d['int'][i]
 			except: 
-				if args.mode == 'SC4':
+				if args.mode == 'sc4':
 					#ints = 30
 					obs.intfac = 30
-				elif args.mode == 'SC1':
+				elif args.mode == 'sc1':
 					#ints = 20
 					obs.intfac = 20
 					obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
@@ -538,7 +539,7 @@ def main():
 				if args.mode == 'imaging':
 					writesource_imaging(obs)
 
-				elif args.mode == 'SC4':
+				elif args.mode == 'sc4':
 
 					# # Reset the tid if needed
 					# if str(old_edate) != str(date) and old_edate != None:
@@ -547,7 +548,7 @@ def main():
 
 					writesource_sc4(obs)		
 
-				elif args.mode == 'SC1':
+				elif args.mode == 'sc1':
 					writesource_sc1(obs)		
 
 

@@ -482,7 +482,7 @@ def make_verification(obs,mode):
 
 		generate_tests(names,ras,decs,patterns,beams,obs)
 
-	elif mode == 'SC4':
+	elif mode == 'sc4':
 		obs.obsmode = 'arts_sc4_survey'
 		bestcal,ra,dec = get_cal_arts()
 		obs.src = bestcal
@@ -497,7 +497,7 @@ def make_verification(obs,mode):
 
 		writesource_sc4(obs)	
 
-	elif mode == 'SC1':
+	elif mode == 'sc1':
 		obs.obsmode = 'arts_sc1_timing'
 		bestcal,ra,dec = get_cal_arts()
 		obs.src = bestcal
