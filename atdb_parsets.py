@@ -29,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/cal_20190623_v3.csv',
+		default='input/drift_20190715.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -222,7 +222,7 @@ def main():
 				# if duration < 0:
 				# 	duration = 86400 + duration
 
-			elif 'duration' in d.keys():
+			elif 'duration' in d.keys() and d['duration'][i] != '-':
 				edate_dt = sdate_dt + timedelta(seconds=float(d['duration'][i]))
 				etime = str(edate_dt.time())
 				duration = d['duration'][i]
