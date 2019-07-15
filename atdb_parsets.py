@@ -226,6 +226,9 @@ def main():
 				edate_dt = sdate_dt + timedelta(seconds=float(d['duration'][i]))
 				etime = str(edate_dt.time())
 				duration = d['duration'][i]
+			else:
+				edate_dt = None
+				duration = None
 
 			# Assign the results to the class
 			obs.sdate = sdate_dt
