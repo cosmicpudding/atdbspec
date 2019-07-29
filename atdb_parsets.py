@@ -307,7 +307,7 @@ def main():
 				
 			# Add the SC1 template no matter what	
 			if args.mode == 'sc1':
-				obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
+				obs.template = '--parset_location=/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template '
 
 			# Define weight pattern
 			try:
