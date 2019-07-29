@@ -29,14 +29,14 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/drift_20190715.csv',
+		default='input/sc1test.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-		default='imaging',
+		default='sc1',
 		type = str.lower,
 		help='Specify whether mode is imaging/sc1/sc4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-		default='23456789ABCD',
+		default='23456789',
 		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
 		default=False,
@@ -304,7 +304,10 @@ def main():
 				elif args.mode == 'sc1':
 					#ints = 20
 					obs.intfac = 20
-					obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
+				
+			# Add the SC1 template no matter what	
+			if args.mode == 'sc1':
+				obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
 
 			# Define weight pattern
 			try:

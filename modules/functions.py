@@ -508,6 +508,7 @@ def make_verification(obs,mode):
 		obs.parfile = obs.src[1:]+'.par'
 		obs.intfac = 20
 		obs.duration = 300
+		obs.template = '/opt/apertif/share/parsets/parset_start_observation_atdb_arts_sc1.template'
 
 		writesource_sc1(obs)	
 
