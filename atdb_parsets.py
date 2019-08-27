@@ -29,14 +29,14 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/sc1test.csv',
+		default='input/sched_20190424.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-		default='sc1',
+		default='imaging',
 		type = str.lower,
 		help='Specify whether mode is imaging/sc1/sc4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-		default='23456789',
+		default='23456789ABCD',
 		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
 		default=False,
@@ -238,6 +238,12 @@ def main():
 			# Define the obs type (not needed really?)
 			src_obstype = obs.obstype
 
+			# Define the process type
+			if 'process_type' in d.keys():
+				obs.processtype = '--process_type=%s ' % d['process_type'][i]
+			else:
+				obs.processtype = '--process_type=science '
+
 			# Observing mode
 			if args.mode == 'sc4':
 				#observing_mode = 'arts_sc4_survey'
@@ -410,6 +416,7 @@ def main():
 					# Send the relevant data to the pointing function
 					#observing_mode = 'imaging_pointing'
 					obs.obsmode = 'imaging_pointing'
+					obs.processtype = '--process_type=pointing '
 
 					#make_pointing(sdate_dt,edate_dt,ints,weightpatt,out,args.telescopes,observing_mode,parsetonly,hadec)
 					make_pointing(obs)
