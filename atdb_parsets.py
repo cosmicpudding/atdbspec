@@ -65,6 +65,10 @@ def main():
 		default=1370,
 		type = int,
 		help='Specify which central frequency, in imaging mode (default: %(default)s)')
+	parser.add_argument('-b', '--beams',
+		default='[0..39]',
+		type = str,
+		help='Specify which CBs to record in ARTS SC4  mode (default: %(default)s)')
 
 
 	# Parse the arguments above
@@ -124,8 +128,9 @@ def main():
 		#parsetonly = ''
 		obs.parsetonly = ''
 
-	# Consider also ARTS mode
+	# Consider also ARTS mode and beams
 	obs.artsmode = args.artsmode
+        obs.beams = args.beams
 
 	# Verification observation
 	if args.verification:
