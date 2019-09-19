@@ -107,7 +107,7 @@ def dec2dec(dec):
 def writesource_imaging(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --endtime='{obs.edate}' --pattern={obs.weightpatt} --observing_mode={obs.obsmode} --integration_factor={obs.intfac} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data/apertif/ --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.delayoffset}{obs.template}{obs.processtype}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --endtime='{obs.edate}' --pattern={obs.weightpatt} --observing_mode={obs.obsmode} --integration_factor={obs.intfac} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data/apertif/ --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.delayoffset}{obs.template}{obs.processtype}{obs.skipingest}\n\n""".format(**locals()))
 	obs.out.flush()
 
 ###################################################################
@@ -116,7 +116,7 @@ def writesource_imaging(obs):
 def writesource_sc4(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode={obs.artsmode} --beams="{obs.beams}" --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}{obs.template}{obs.processtype}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --data_dir=/data2/output/ --irods_coll=arts_main/arts_sc4 --science_mode={obs.artsmode} --beams="{obs.beams}" --operation=specification --atdb_host=prod --process_triggers {obs.parsetonly}{obs.extra}{obs.hadec}{obs.template}{obs.processtype}{obs.skipingest}\n\n""".format(**locals()))
 	obs.out.flush()
 
 
@@ -126,38 +126,8 @@ def writesource_sc4(obs):
 def writesource_sc1(obs):
 
 	# Write to file (not plus=)
-	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.skipingest}{obs.template}{obs.processtype}\n\n""".format(**locals()))
+	obs.out.write("""atdb_service --field_name={obs.src} --{obs.ratype}={obs.ra:.6f} --field_dec={obs.dec:.6f} --field_beam={obs.refbeam} --starttime='{obs.sdate}' --duration={obs.duration} --pattern={obs.weightpatt} --integration_factor={obs.intfac} --observing_mode={obs.obsmode} --telescopes={obs.telescopes} --central_frequency={obs.centfreq} --par_file_name={obs.parfile} --start_band={obs.sband} --end_band={obs.eband} --data_dir=/data/01/Timing --irods_coll=arts_main/arts_sc1 --number_of_bins=1024 --ndps=1 --operation=specification --atdb_host=prod {obs.parsetonly}{obs.extra}{obs.hadec}{obs.template}{obs.processtype}{obs.skipingest}\n\n""".format(**locals()))
 	obs.out.flush()
-
-###################################################################
-# Write source: SC4 (depreciated)
-
-def writesource_sc4_cluster(i,j,scan,date,stime,date2,etime,src,ra,dec,old_date,old_etime,ints,weightpatt,refbeam,out,observing_mode,telescopes,sbeam,ebeam,pulsar,duration,cluster_mode,start_tid,start_tnum,parsetonly):
-
-	# Cluster start time
-	sdate_dt = datetime.strptime(str(date)+str(stime),'%Y-%m-%d%H:%M:%S')
-	stime_cluster = (sdate_dt - timedelta(minutes=5)).time()
-
-	# Write to file (not plus=)
-	if pulsar.lower() == 'true':
-		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s --pulsar %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam,parsetonly))
-	else:
-		cmd = ("""sleepuntil_utc %s %s
-start_obs --mac --obs_mode survey --proctrigger --source %s --ra %s --dec %s --tstart "%sT%s" --duration %s --sbeam %s --ebeam %s %s""" % (date,stime_cluster,src,ra,dec,date,stime,duration,sbeam,ebeam,parsetonly))
-
-	# Cluster mode hack
-	if cluster_mode == 'ATDB':
-
-		#make the date format
-		tid_date = datetime.strftime(sdate_dt,'%y%m%d')
-		cmd = cmd + ' --atdb --taskid %s%.3d\n\n' % (tid_date,start_tid+start_tnum) 
-	else:
-		cmd = cmd + '\n\n'
-
-	# Write out at the end
-	out.write(cmd)
-	out.flush()
 
 ###################################################################
 # Convert pointing observation into a series of observations
@@ -446,6 +416,7 @@ def make_verification(obs,mode):
 	obs.skipingest = ''
 	obs.template = ''
 	obs.processtype = '--process_type=validation '
+	obs.skipingest = '--skip_auto_ingest '
 
 	# Define start time as 5 min from now
 	obs.sdate = datetime.utcnow().replace(microsecond=0) + timedelta(minutes=5)

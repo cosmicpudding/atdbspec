@@ -19,17 +19,17 @@ import getpass
 
 def main():
 	"""
-    The main program to be run.
-    :return:
-    """
+	The main program to be run.
+	:return:
+	"""
 
-    # Time the total process length
+	# Time the total process length
 	start = time.time()
 
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/sched_20190424.csv',
+		default='input/drift_20190715.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -69,6 +69,10 @@ def main():
 		default='[0..39]',
 		type = str,
 		help='Specify which CBs to record in ARTS SC4  mode (default: %(default)s)')
+	parser.add_argument('-i', '--skipingest',
+		default=False,
+		action='store_true',
+		help='Specify whether to skip auto ingest(default: %(default)s)')
 
 
 	# Parse the arguments above
@@ -128,9 +132,15 @@ def main():
 		#parsetonly = ''
 		obs.parsetonly = ''
 
+	# Decide about whether to skip ingest or not
+	if args.skipingest == True:
+		obs.skipingest = '--skip_auto_ingest '
+	else:
+		obs.skipingest = ''
+
 	# Consider also ARTS mode and beams
 	obs.artsmode = args.artsmode
-        obs.beams = args.beams
+	obs.beams = args.beams
 
 	# Verification observation
 	if args.verification:
@@ -263,8 +273,6 @@ def main():
 				obs.pulsar = d['pulsar'][i]
 
 			elif args.mode == 'sc1':
-
-				obs.skipingest = ''
 
 				if d['mode'][i] == 'timing':
 					#observing_mode = 'arts_sc1_timing'
@@ -592,5 +600,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+	main()
 
