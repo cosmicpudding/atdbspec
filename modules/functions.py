@@ -140,15 +140,8 @@ def make_pointing(obs):
 	# Define the parameters needed from obs
 	sdate_dt = obs.sdate
 	edate_dt = obs.edate
-	ints = obs.intfac
-	weightpatt = obs.weightpatt	
-	out = obs.out
-	telescopes = obs.telescopes
-	observing_mode = obs.obsmode
-	parsetonly = obs.parsetonly
-	hadec = obs.hadec
 
-	print(sdate_dt,edate_dt,ints,weightpatt)
+	print(sdate_dt,edate_dt,obs.intfac,obs.weightpatt)
 	
 	# Read the pointing table
 	d = ascii.read('modules/stfma_v3.t')
@@ -226,10 +219,27 @@ def make_pointing(obs):
 		old_src_end_dt = src_end_dt 
 
 	for x in chosen_sources:
-		print(x[6],x[0],x[1],x[2],x[3],'s',x[4],x[5])
-		refbeam = '0'
+		print(x[6],x[0],x[1],x[2],x[3],x[4],x[5])
+		
+		obs.refbeam = '0'
 
-		writesource_imaging(x[4].date(),x[4].time(),x[5].date(),x[5].time(),x[1],x[2],x[3],ints,weightpatt,refbeam,out,telescopes,observing_mode,parsetonly,hadec)
+		# Global params
+		obs.ratype = 'field_ra'
+		obs.extra = ''
+		obs.hadec = ''
+		obs.delayoffset = ''
+		obs.skipingest = ''
+		obs.template = ''
+
+		# Change things that are necessary
+		obs.sdate = x[4]
+		obs.edate = x[5]
+		obs.src = x[1]
+		obs.ra = x[2]
+		obs.dec = x[3]
+
+		# Write to file
+		writesource_imaging(obs)
 
 
 ###################################################################
