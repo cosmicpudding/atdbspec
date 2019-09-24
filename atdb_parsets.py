@@ -73,7 +73,10 @@ def main():
 		default=False,
 		action='store_true',
 		help='Specify whether to skip auto ingest(default: %(default)s)')
-
+	parser.add_argument('-r', '--refbeam',
+		default='0',
+		type = str,
+		help='Specify which reference beam to use (default: %(default)s)')
 
 	# Parse the arguments above
 	args = parser.parse_args()
@@ -147,6 +150,7 @@ def main():
 		obs.numofobs = args.numofobs
 		obs.selobs = args.selobs
 		obs.centfreq = args.centfreq
+		obs.refbeam = args.refbeam
 		out,outname = make_verification(obs,args.mode)
 		obs.out = out
 		obs.outname = outname
@@ -310,7 +314,7 @@ def main():
 				#refbeam = '0'
 
 				# Class replacements
-				obs.refbeam = '0'
+				obs.refbeam = args.refbeam
 
 			# Determine the integration factor in seconds
 			try:
@@ -441,7 +445,7 @@ def main():
 					print('Operations tests mode identified!')
 
 					# Determine if offset beam is chosen or random
-					if obs.refbeam != 0:
+					if str(obs.refbeam) != '0':
 						offbeam = obs.refbeam
 					else:
 						offbeam = randint(1,40)

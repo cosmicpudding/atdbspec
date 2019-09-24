@@ -418,7 +418,6 @@ def make_verification(obs,mode):
 
 	# Global params
 	obs.weightpatt = 'square_39p1'
-	obs.refbeam = 0
 	obs.ratype = 'field_ra'
 	obs.extra = ''
 	obs.hadec = ''
