@@ -29,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/atdbpointing_sep2019.csv',
+		default='input/pointing_20190924_v2.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -446,7 +446,7 @@ def main():
 
 					# Determine if offset beam is chosen or random
 					if str(obs.refbeam) != '0':
-						offbeam = obs.refbeam
+						offbeam = int(obs.refbeam)
 					else:
 						offbeam = randint(1,40)
 

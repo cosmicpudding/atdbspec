@@ -453,7 +453,7 @@ def make_verification(obs,mode):
 
 		# Determine if offset beam is chosen or random
 		if obs.refbeam != 0:
-			offbeam = obs.refbeam
+			offbeam = int(obs.refbeam)
 		else:
 			offbeam = randint(1,40)
 		beamname = 'B0%.2d' % offbeam
