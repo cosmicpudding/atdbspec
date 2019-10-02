@@ -29,7 +29,7 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/pointing_20190924_v2.csv',
+		default='input/pointing_test_191001_imaging.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
 		default='imaging',
@@ -382,6 +382,8 @@ def main():
 
 				elif d['ra'][i] == '-':
 					print('No coordinates specified... maybe a pointing observation?')
+					ra = d['ra'][i]
+					dec = d['dec'][i]
 
 				elif 'deg' in d['ra'][i]:
 					ra = float(d['ra'][i].split('deg')[0])
