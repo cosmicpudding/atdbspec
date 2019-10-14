@@ -77,6 +77,10 @@ def main():
 		default='0',
 		type = str,
 		help='Specify which reference beam to use (default: %(default)s)')
+	parser.add_argument('-d', '--duration',
+		default=None,
+		type = int,
+		help='Specify non-standard duration of imaging verification observations (default: %(default)s)')
 
 	# Parse the arguments above
 	args = parser.parse_args()
@@ -151,6 +155,7 @@ def main():
 		obs.selobs = args.selobs
 		obs.centfreq = args.centfreq
 		obs.refbeam = args.refbeam
+		obs.duration = args.duration
 		out,outname = make_verification(obs,args.mode)
 		obs.out = out
 		obs.outname = outname

@@ -44,6 +44,7 @@ class Observation:
 		self.obstype = None
 		self.systemoffset = None
 		self.processtype = None
+		self.duration = None
 
 		# SC4 specific parameters
 		self.sbeam = None
@@ -449,7 +450,10 @@ def make_verification(obs,mode):
 		obs.dec = dec
 		obs.intfac = 10
 		obs.extra = '--end_band=24 '
-		obs.duration = 60
+
+		# Allow override of duration for imaging only
+		if not obs.duration:
+			obs.duration = 60
 
 		# Determine if offset beam is chosen or random
 		if obs.refbeam != 0:
