@@ -29,14 +29,14 @@ def main():
 	# Parse the relevant arguments
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-f', '--filename',
-		default='input/pointing_test_191001_imaging.csv',
+		default='input/Emily Petroff - sc4_20191118.csv',
 		help='Specify the input file location (default: %(default)s)')	
 	parser.add_argument('-m', '--mode',
-		default='imaging',
+		default='sc4',
 		type = str.lower,
 		help='Specify whether mode is imaging/sc1/sc4 (default: %(default)s)')
 	parser.add_argument('-t', '--telescopes',
-		default='23456789ABCD',
+		default='23456789',
 		help='Specify which telescopes to include (default: %(default)s)')
 	parser.add_argument('-u', '--upload',
 		default=False,
@@ -258,6 +258,19 @@ def main():
 			obs.sdate = sdate_dt
 			obs.edate = edate_dt
 			obs.duration = duration
+
+			# Check the duration, and print a warning if <= 0
+			if obs.duration <= 0:
+				print('############\nWARNING: Negative duration for %s (row %i): %s seconds!' % (obs.src,i,obs.duration))
+				print('It is recommended that you check the input and contact science teams if necessary...\n############')
+				try:
+					ack = raw_input('Please type "y" to acknowledge this warning and continue anyway: ')
+				except:
+					ack = input('Please type "y" to acknowledge this warning and continue anyway: ')
+
+				if ack != 'y':
+					print('You did not type "y" so I am exiting out of concern...')
+					sys.exit()
 
 			# Define the obs type (not needed really?)
 			src_obstype = obs.obstype
@@ -593,7 +606,7 @@ def main():
 	out.close()
 
 	# Make the resultting file executables
-	os.system('chmod oug+x %s' % obs.outname)
+	os.system('chmod oug+x "%s"' % obs.outname)
 
 	if args.upload:
 
