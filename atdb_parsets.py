@@ -261,7 +261,7 @@ def main():
 
 			# Check the duration, and print a warning if <= 0
 			if obs.duration <= 0:
-				print('############\nWARNING: Negative duration for %s (row %i): %s seconds!' % (obs.src,i,obs.duration))
+				print('############\nWARNING: Negative duration for %s (row %i): %s seconds!' % (obs.src,i+1,obs.duration))
 				print('It is recommended that you check the input and contact science teams if necessary...\n############')
 				try:
 					ack = raw_input('Please type "y" to acknowledge this warning and continue anyway: ')
