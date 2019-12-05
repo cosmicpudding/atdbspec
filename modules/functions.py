@@ -251,11 +251,11 @@ def generate_tests(names,ras,decs,patterns,beams,obs):
 	end = obs.sdate + timedelta(seconds=int(obs.duration))
 	numobs = 0
 
-	for i in range(0,len(beams)):
+	for i in range(0,len(patterns)):
 
-		for j in range(0,len(patterns)):
-			beam = beams[i]
-			pattern = patterns[j]
+		for j in range(0,len(beams)):
+			beam = beams[j]
+			pattern = patterns[i]
 			if i == (len(beams)-1) and len(beams) > 2:
 				if pattern == 'square_39p1':
 					ra = ras[i][0]
