@@ -461,7 +461,11 @@ def make_verification(obs,mode):
 		else:
 			offbeam = randint(1,40)
 		beamname = 'B0%.2d' % offbeam
-		beams = [0,offbeam]
+		# If a ref beam is specified and only one obs, do the refbeam only
+		if obs.numofobs == 1:
+			beams = [offbeam,offbeam]
+		else:
+			beams = [0,offbeam]
 		ras = [ra,ra]
 		decs = [dec,dec]
 		names = [obs.src,obs.src + '_%i' % offbeam]
